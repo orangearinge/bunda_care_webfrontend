@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { IconTrash, IconPlus } from "@tabler/icons-react"
 import {
     Select,
@@ -10,13 +10,24 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { mockIngredients } from "@/data/mockData"
+import { useIngredients } from "@/hooks/useIngredients"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export function IngredientPicker({ value = [], onChange }) {
+export function IngredientPicker({ value = [], onChange, disabled }) {
     const [ingredients, setIngredients] = useState(value)
+    const { data, isLoading } = useIngredients()
+
+    const availableIngredients = Array.isArray(data) ? data : data?.items || []
+
+    // Sync with parent value
+    useEffect(() => {
+        setIngredients(value)
+    }, [value])
 
     const addIngredient = () => {
-        setIngredients([...ingredients, { ingredient_id: "", quantity_g: 0 }])
+        const newIngredients = [...ingredients, { ingredient_id: "", quantity_g: 0 }]
+        setIngredients(newIngredients)
+        onChange(newIngredients)
     }
 
     const removeIngredient = (index) => {
@@ -29,7 +40,7 @@ export function IngredientPicker({ value = [], onChange }) {
         const newIngredients = [...ingredients]
         newIngredients[index][field] = value
         if (field === "ingredient_id") {
-            const ingredient = mockIngredients.find((i) => i.id === parseInt(value))
+            const ingredient = availableIngredients.find((i) => i.id === parseInt(value))
             if (ingredient) {
                 newIngredients[index].ingredient_name = ingredient.name
             }
@@ -41,19 +52,22 @@ export function IngredientPicker({ value = [], onChange }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <Label>Ingredients</Label>
+                <Label>Ingredients <span className="text-destructive">*</span></Label>
                 <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={addIngredient}
+                    disabled={disabled || isLoading}
                 >
                     <IconPlus className="mr-2 size-4" />
                     Add Ingredient
                 </Button>
             </div>
 
-            {ingredients.length === 0 ? (
+            {isLoading ? (
+                <Skeleton className="h-24 w-full" />
+            ) : ingredients.length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center p-4 border border-dashed rounded-lg">
                     No ingredients added. Click "Add Ingredient" to start.
                 </div>
@@ -69,12 +83,13 @@ export function IngredientPicker({ value = [], onChange }) {
                                         onValueChange={(value) =>
                                             updateIngredient(index, "ingredient_id", value)
                                         }
+                                        disabled={disabled}
                                     >
                                         <SelectTrigger id={`ingredient-${index}`}>
                                             <SelectValue placeholder="Select ingredient" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {mockIngredients.map((ing) => (
+                                            {availableIngredients.map((ing) => (
                                                 <SelectItem key={ing.id} value={ing.id.toString()}>
                                                     {ing.name}
                                                 </SelectItem>
@@ -93,6 +108,7 @@ export function IngredientPicker({ value = [], onChange }) {
                                             updateIngredient(index, "quantity_g", parseInt(e.target.value) || 0)
                                         }
                                         placeholder="0"
+                                        disabled={disabled}
                                     />
                                 </div>
                             </div>
@@ -102,6 +118,7 @@ export function IngredientPicker({ value = [], onChange }) {
                                 size="icon"
                                 onClick={() => removeIngredient(index)}
                                 className="text-destructive hover:text-destructive"
+                                disabled={disabled}
                             >
                                 <IconTrash className="size-4" />
                             </Button>

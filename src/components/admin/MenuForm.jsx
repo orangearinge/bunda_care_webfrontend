@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Drawer,
     DrawerClose,
@@ -20,20 +20,37 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { IngredientPicker } from "@/components/admin/IngredientPicker"
+import { useCreateMenu, useUpdateMenu } from "@/hooks/useMenus"
 import { toast } from "sonner"
 
 const mealTypes = ["BREAKFAST", "LUNCH", "DINNER"]
 
-export function MenuForm({ menu, open, onOpenChange, onSave }) {
-    const [formData, setFormData] = useState(
-        menu || {
-            name: "",
-            meal_type: "BREAKFAST",
-            tags: "",
-            is_active: true,
-            ingredients: [],
+export function MenuForm({ menu, open, onOpenChange }) {
+    const [formData, setFormData] = useState({
+        name: "",
+        meal_type: "BREAKFAST",
+        tags: "",
+        is_active: true,
+        ingredients: [],
+    })
+
+    const createMenuMutation = useCreateMenu()
+    const updateMenuMutation = useUpdateMenu()
+
+    // Update form data when menu changes
+    useEffect(() => {
+        if (menu) {
+            setFormData(menu)
+        } else {
+            setFormData({
+                name: "",
+                meal_type: "BREAKFAST",
+                tags: "",
+                is_active: true,
+                ingredients: [],
+            })
         }
-    )
+    }, [menu])
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -43,19 +60,27 @@ export function MenuForm({ menu, open, onOpenChange, onSave }) {
             return
         }
 
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 1000)),
-            {
-                loading: menu ? "Updating menu..." : "Creating menu...",
-                success: () => {
-                    onSave({ ...formData, id: menu?.id || Date.now() })
+        if (menu) {
+            // Update existing menu
+            updateMenuMutation.mutate(
+                { id: menu.id, data: formData },
+                {
+                    onSuccess: () => {
+                        onOpenChange(false)
+                    },
+                }
+            )
+        } else {
+            // Create new menu
+            createMenuMutation.mutate(formData, {
+                onSuccess: () => {
                     onOpenChange(false)
-                    return menu ? "Menu updated successfully" : "Menu created successfully"
                 },
-                error: "Failed to save menu",
-            }
-        )
+            })
+        }
     }
+
+    const isPending = createMenuMutation.isPending || updateMenuMutation.isPending
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -78,6 +103,7 @@ export function MenuForm({ menu, open, onOpenChange, onSave }) {
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., Healthy Breakfast Bowl"
                                 required
+                                disabled={isPending}
                             />
                         </div>
 
@@ -88,6 +114,7 @@ export function MenuForm({ menu, open, onOpenChange, onSave }) {
                             <Select
                                 value={formData.meal_type}
                                 onValueChange={(value) => setFormData({ ...formData, meal_type: value })}
+                                disabled={isPending}
                             >
                                 <SelectTrigger id="meal_type">
                                     <SelectValue />
@@ -109,6 +136,7 @@ export function MenuForm({ menu, open, onOpenChange, onSave }) {
                                 value={formData.tags}
                                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                                 placeholder="e.g., healthy,protein,fiber (comma separated)"
+                                disabled={isPending}
                             />
                         </div>
 
@@ -120,21 +148,23 @@ export function MenuForm({ menu, open, onOpenChange, onSave }) {
                                 onCheckedChange={(checked) =>
                                     setFormData({ ...formData, is_active: checked })
                                 }
+                                disabled={isPending}
                             />
                         </div>
 
                         <IngredientPicker
                             value={formData.ingredients}
                             onChange={(ingredients) => setFormData({ ...formData, ingredients })}
+                            disabled={isPending}
                         />
                     </div>
                 </form>
                 <DrawerFooter>
-                    <Button onClick={handleSubmit}>
-                        {menu ? "Update Menu" : "Create Menu"}
+                    <Button onClick={handleSubmit} disabled={isPending}>
+                        {isPending ? (menu ? "Updating..." : "Creating...") : (menu ? "Update Menu" : "Create Menu")}
                     </Button>
                     <DrawerClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline" disabled={isPending}>Cancel</Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>

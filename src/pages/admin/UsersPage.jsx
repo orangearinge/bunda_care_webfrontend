@@ -1,9 +1,7 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import {
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
@@ -32,20 +30,33 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { mockUsers } from "@/data/mockData"
 import { UserRoleDialog } from "@/components/admin/UserRoleDialog"
 import { SearchBar } from "@/components/admin/SearchBar"
+import { useUsers } from "@/hooks/useUsers"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function UsersPage() {
-    const [data, setData] = useState(mockUsers)
     const [searchQuery, setSearchQuery] = useState("")
     const [roleFilter, setRoleFilter] = useState("ALL")
     const [editingUser, setEditingUser] = useState(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [pagination, setPagination] = useState({
-        pageIndex: 0,
-        pageSize: 10,
-    })
+    const [page, setPage] = useState(1)
+    const [limit] = useState(10)
+
+    // Build query params
+    const queryParams = {
+        page,
+        limit,
+        ...(searchQuery && { search: searchQuery }),
+        ...(roleFilter !== "ALL" && { role: roleFilter }),
+    }
+
+    // Fetch users with React Query
+    const { data, isLoading, isError } = useUsers(queryParams)
+
+    const users = data?.items || []
+    const totalPages = data?.pages || 1
+    const total = data?.total || 0
 
     const columns = [
         {
@@ -115,33 +126,21 @@ export default function UsersPage() {
         },
     ]
 
-    const filteredData = useMemo(() => {
-        return data.filter((user) => {
-            const matchesSearch =
-                user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchQuery.toLowerCase())
-            const matchesRole = roleFilter === "ALL" || user.role === roleFilter
-            return matchesSearch && matchesRole
-        })
-    }, [data, searchQuery, roleFilter])
-
     const table = useReactTable({
-        data: filteredData,
+        data: users,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onPaginationChange: setPagination,
-        state: {
-            pagination,
-        },
+        manualPagination: true,
+        pageCount: totalPages,
     })
 
-    const handleSaveRole = (updatedUser) => {
-        setData((prev) =>
-            prev.map((user) => (user.id === updatedUser.id ? updatedUser : user))
-        )
+    const handlePrevious = () => {
+        if (page > 1) setPage(page - 1)
+    }
+
+    const handleNext = () => {
+        if (page < totalPages) setPage(page + 1)
     }
 
     return (
@@ -202,7 +201,26 @@ export default function UsersPage() {
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            [...Array(5)].map((_, i) => (
+                                <TableRow key={i}>
+                                    {columns.map((_, j) => (
+                                        <TableCell key={j}>
+                                            <Skeleton className="h-6 w-full" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : isError ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-destructive"
+                                >
+                                    Failed to load users
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
@@ -235,32 +253,33 @@ export default function UsersPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                    Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-                    {Math.min(
-                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                        filteredData.length
-                    )}{" "}
-                    of {filteredData.length} users
+                    {isLoading ? (
+                        "Loading..."
+                    ) : (
+                        <>
+                            Showing {(page - 1) * limit + 1} to{" "}
+                            {Math.min(page * limit, total)} of {total} users
+                        </>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={handlePrevious}
+                        disabled={page === 1 || isLoading}
                     >
                         <IconChevronLeft className="size-4" />
                         Previous
                     </Button>
                     <div className="text-sm">
-                        Page {table.getState().pagination.pageIndex + 1} of{" "}
-                        {table.getPageCount()}
+                        Page {page} of {totalPages}
                     </div>
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        onClick={handleNext}
+                        disabled={page >= totalPages || isLoading}
                     >
                         Next
                         <IconChevronRight className="size-4" />
@@ -273,7 +292,6 @@ export default function UsersPage() {
                 user={editingUser}
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
-                onSave={handleSaveRole}
             />
         </div>
     )

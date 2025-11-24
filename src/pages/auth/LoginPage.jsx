@@ -1,38 +1,32 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "@/contexts/AuthContext"
+import { useLogin } from "@/hooks/useAuthHooks"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { IconInnerShadowTop } from "@tabler/icons-react"
-import { toast } from "sonner"
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const { login } = useAuth()
     const navigate = useNavigate()
+    const loginMutation = useLogin()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
         if (!email || !password) {
-            toast.error("Please fill in all fields")
             return
         }
 
-        setIsLoading(true)
-
-        try {
-            await login(email, password)
-            toast.success("Login successful!")
-            navigate("/admin/dashboard")
-        } catch (error) {
-            toast.error("Login failed. Please try again.")
-        } finally {
-            setIsLoading(false)
-        }
+        loginMutation.mutate(
+            { email, password },
+            {
+                onSuccess: () => {
+                    navigate("/admin/dashboard")
+                },
+            }
+        )
     }
 
     return (
@@ -61,6 +55,7 @@ export default function LoginPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     className="h-11"
+                                    disabled={loginMutation.isPending}
                                 />
                             </Field>
 
@@ -74,12 +69,13 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     className="h-11"
+                                    disabled={loginMutation.isPending}
                                 />
                             </Field>
 
                             <Field>
-                                <Button type="submit" className="w-full h-11" disabled={isLoading}>
-                                    {isLoading ? "Logging in..." : "Login"}
+                                <Button type="submit" className="w-full h-11" disabled={loginMutation.isPending}>
+                                    {loginMutation.isPending ? "Logging in..." : "Login"}
                                 </Button>
                             </Field>
                         </FieldGroup>

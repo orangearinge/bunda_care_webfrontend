@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
@@ -16,25 +16,30 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
+import { useUpdateUserRole } from "@/hooks/useUsers"
 
 const roles = ["USER", "ADMIN", "MODERATOR"]
 
-export function UserRoleDialog({ user, open, onOpenChange, onSave }) {
+export function UserRoleDialog({ user, open, onOpenChange }) {
     const [selectedRole, setSelectedRole] = useState(user?.role || "USER")
+    const updateRoleMutation = useUpdateUserRole()
+
+    // Update selected role when user changes
+    useEffect(() => {
+        if (user?.role) {
+            setSelectedRole(user.role)
+        }
+    }, [user])
 
     const handleSave = () => {
-        // Mock save - in real app would call API
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 1000)),
+        if (!user) return
+
+        updateRoleMutation.mutate(
+            { id: user.id, role: selectedRole },
             {
-                loading: `Updating ${user.name}'s role...`,
-                success: () => {
-                    onSave({ ...user, role: selectedRole })
+                onSuccess: () => {
                     onOpenChange(false)
-                    return `Role updated to ${selectedRole}`
                 },
-                error: "Failed to update role",
             }
         )
     }
@@ -53,7 +58,7 @@ export function UserRoleDialog({ user, open, onOpenChange, onSave }) {
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                         <Label htmlFor="role">Role</Label>
-                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                        <Select value={selectedRole} onValueChange={setSelectedRole} disabled={updateRoleMutation.isPending}>
                             <SelectTrigger id="role">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -68,10 +73,12 @@ export function UserRoleDialog({ user, open, onOpenChange, onSave }) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={updateRoleMutation.isPending}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSave}>Save Changes</Button>
+                    <Button onClick={handleSave} disabled={updateRoleMutation.isPending}>
+                        {updateRoleMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

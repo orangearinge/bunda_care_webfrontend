@@ -1,9 +1,7 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import {
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
@@ -39,21 +37,28 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { mockMenus } from "@/data/mockData"
 import { MenuForm } from "@/components/admin/MenuForm"
 import { SearchBar } from "@/components/admin/SearchBar"
-import { toast } from "sonner"
+import { useMenus, useDeleteMenu } from "@/hooks/useMenus"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MenusPage() {
-    const [data, setData] = useState(mockMenus)
     const [searchQuery, setSearchQuery] = useState("")
     const [mealTypeFilter, setMealTypeFilter] = useState("ALL")
     const [editingMenu, setEditingMenu] = useState(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [pagination, setPagination] = useState({
-        pageIndex: 0,
-        pageSize: 10,
-    })
+
+    // Build query params
+    const queryParams = {
+        ...(searchQuery && { search: searchQuery }),
+        ...(mealTypeFilter !== "ALL" && { meal_type: mealTypeFilter }),
+    }
+
+    // Fetch menus with React Query
+    const { data, isLoading, isError } = useMenus(queryParams)
+    const deleteMenuMutation = useDeleteMenu()
+
+    const menus = Array.isArray(data) ? data : data?.items || []
 
     const columns = [
         {
@@ -79,16 +84,18 @@ export default function MenusPage() {
             header: "Tags",
             cell: ({ row }) => {
                 const tags = row.getValue("tags")
+                if (!tags) return null
+                const tagList = typeof tags === 'string' ? tags.split(",") : tags
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {tags.split(",").slice(0, 2).map((tag, i) => (
+                        {tagList.slice(0, 2).map((tag, i) => (
                             <Badge key={i} variant="secondary" className="text-xs">
-                                {tag.trim()}
+                                {typeof tag === 'string' ? tag.trim() : tag}
                             </Badge>
                         ))}
-                        {tags.split(",").length > 2 && (
+                        {tagList.length > 2 && (
                             <Badge variant="secondary" className="text-xs">
-                                +{tags.split(",").length - 2}
+                                +{tagList.length - 2}
                             </Badge>
                         )}
                     </div>
@@ -111,7 +118,7 @@ export default function MenusPage() {
             id: "ingredients",
             header: "Ingredients",
             cell: ({ row }) => {
-                const count = row.original.ingredients.length
+                const count = row.original.ingredients?.length || 0
                 return <div className="text-sm text-muted-foreground">{count} items</div>
             },
         },
@@ -138,8 +145,9 @@ export default function MenusPage() {
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                onClick={() => handleDelete(menu.id)}
+                                onClick={() => deleteMenuMutation.mutate(menu.id)}
                                 className="text-destructive"
+                                disabled={deleteMenuMutation.isPending}
                             >
                                 <IconTrash className="mr-2 size-4" />
                                 Delete
@@ -151,48 +159,12 @@ export default function MenusPage() {
         },
     ]
 
-    const filteredData = useMemo(() => {
-        return data.filter((menu) => {
-            const matchesSearch = menu.name.toLowerCase().includes(searchQuery.toLowerCase())
-            const matchesMealType = mealTypeFilter === "ALL" || menu.meal_type === mealTypeFilter
-            return matchesSearch && matchesMealType
-        })
-    }, [data, searchQuery, mealTypeFilter])
-
     const table = useReactTable({
-        data: filteredData,
+        data: menus,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onPaginationChange: setPagination,
-        state: {
-            pagination,
-        },
     })
-
-    const handleSave = (savedMenu) => {
-        if (editingMenu) {
-            setData((prev) => prev.map((menu) => (menu.id === savedMenu.id ? savedMenu : menu)))
-        } else {
-            setData((prev) => [...prev, savedMenu])
-        }
-    }
-
-    const handleDelete = (id) => {
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 800)),
-            {
-                loading: "Deleting menu...",
-                success: () => {
-                    setData((prev) => prev.filter((menu) => menu.id !== id))
-                    return "Menu deleted successfully"
-                },
-                error: "Failed to delete menu",
-            }
-        )
-    }
 
     const handleCreateNew = () => {
         setEditingMenu(null)
@@ -260,7 +232,23 @@ export default function MenusPage() {
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            [...Array(5)].map((_, i) => (
+                                <TableRow key={i}>
+                                    {columns.map((_, j) => (
+                                        <TableCell key={j}>
+                                            <Skeleton className="h-6 w-full" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : isError ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center text-destructive">
+                                    Failed to load menus
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
@@ -281,47 +269,11 @@ export default function MenusPage() {
                 </Table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                    Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-                    {Math.min(
-                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                        filteredData.length
-                    )}{" "}
-                    of {filteredData.length} menus
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        <IconChevronLeft className="size-4" />
-                        Previous
-                    </Button>
-                    <div className="text-sm">
-                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                        <IconChevronRight className="size-4" />
-                    </Button>
-                </div>
-            </div>
-
             {/* Create/Edit Menu Drawer */}
             <MenuForm
                 menu={editingMenu}
                 open={isDrawerOpen}
                 onOpenChange={setIsDrawerOpen}
-                onSave={handleSave}
             />
         </div>
     )

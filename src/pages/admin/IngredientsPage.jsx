@@ -1,9 +1,7 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import {
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
@@ -30,20 +28,26 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { mockIngredients } from "@/data/mockData"
 import { IngredientForm } from "@/components/admin/IngredientForm"
 import { SearchBar } from "@/components/admin/SearchBar"
-import { toast } from "sonner"
+import { useIngredients, useDeleteIngredient } from "@/hooks/useIngredients"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function IngredientsPage() {
-    const [data, setData] = useState(mockIngredients)
     const [searchQuery, setSearchQuery] = useState("")
     const [editingIngredient, setEditingIngredient] = useState(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [pagination, setPagination] = useState({
-        pageIndex: 0,
-        pageSize: 10,
-    })
+
+    // Build query params
+    const queryParams = {
+        ...(searchQuery && { search: searchQuery }),
+    }
+
+    // Fetch ingredients with React Query
+    const { data, isLoading, isError } = useIngredients(queryParams)
+    const deleteIngredientMutation = useDeleteIngredient()
+
+    const ingredients = Array.isArray(data) ? data : data?.items || []
 
     const columns = [
         {
@@ -77,7 +81,7 @@ export default function IngredientsPage() {
             header: () => <div className="text-right">Protein (g)</div>,
             cell: ({ row }) => {
                 const protein = row.getValue("protein_g")
-                return <div className="text-right tabular-nums">{protein.toFixed(1)}</div>
+                return <div className="text-right tabular-nums">{protein?.toFixed(1) || "0.0"}</div>
             },
         },
         {
@@ -85,7 +89,7 @@ export default function IngredientsPage() {
             header: () => <div className="text-right">Carbs (g)</div>,
             cell: ({ row }) => {
                 const carbs = row.getValue("carbs_g")
-                return <div className="text-right tabular-nums">{carbs.toFixed(1)}</div>
+                return <div className="text-right tabular-nums">{carbs?.toFixed(1) || "0.0"}</div>
             },
         },
         {
@@ -93,7 +97,7 @@ export default function IngredientsPage() {
             header: () => <div className="text-right">Fat (g)</div>,
             cell: ({ row }) => {
                 const fat = row.getValue("fat_g")
-                return <div className="text-right tabular-nums">{fat.toFixed(1)}</div>
+                return <div className="text-right tabular-nums">{fat?.toFixed(1) || "0.0"}</div>
             },
         },
         {
@@ -119,8 +123,9 @@ export default function IngredientsPage() {
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                onClick={() => handleDelete(ingredient.id)}
+                                onClick={() => deleteIngredientMutation.mutate(ingredient.id)}
                                 className="text-destructive"
+                                disabled={deleteIngredientMutation.isPending}
                             >
                                 <IconTrash className="mr-2 size-4" />
                                 Delete
@@ -132,52 +137,12 @@ export default function IngredientsPage() {
         },
     ]
 
-    const filteredData = useMemo(() => {
-        return data.filter((ingredient) => {
-            const searchLower = searchQuery.toLowerCase()
-            return (
-                ingredient.name.toLowerCase().includes(searchLower) ||
-                ingredient.alt_names?.toLowerCase().includes(searchLower)
-            )
-        })
-    }, [data, searchQuery])
-
     const table = useReactTable({
-        data: filteredData,
+        data: ingredients,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onPaginationChange: setPagination,
-        state: {
-            pagination,
-        },
     })
-
-    const handleSave = (savedIngredient) => {
-        if (editingIngredient) {
-            setData((prev) =>
-                prev.map((ing) => (ing.id === savedIngredient.id ? savedIngredient : ing))
-            )
-        } else {
-            setData((prev) => [...prev, savedIngredient])
-        }
-    }
-
-    const handleDelete = (id) => {
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 800)),
-            {
-                loading: "Deleting ingredient...",
-                success: () => {
-                    setData((prev) => prev.filter((ing) => ing.id !== id))
-                    return "Ingredient deleted successfully"
-                },
-                error: "Failed to delete ingredient",
-            }
-        )
-    }
 
     const handleCreateNew = () => {
         setEditingIngredient(null)
@@ -227,7 +192,23 @@ export default function IngredientsPage() {
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            [...Array(5)].map((_, i) => (
+                                <TableRow key={i}>
+                                    {columns.map((_, j) => (
+                                        <TableCell key={j}>
+                                            <Skeleton className="h-6 w-full" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : isError ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center text-destructive">
+                                    Failed to load ingredients
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
@@ -248,47 +229,11 @@ export default function IngredientsPage() {
                 </Table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                    Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-                    {Math.min(
-                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                        filteredData.length
-                    )}{" "}
-                    of {filteredData.length} ingredients
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        <IconChevronLeft className="size-4" />
-                        Previous
-                    </Button>
-                    <div className="text-sm">
-                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                        <IconChevronRight className="size-4" />
-                    </Button>
-                </div>
-            </div>
-
             {/* Create/Edit Ingredient Drawer */}
             <IngredientForm
                 ingredient={editingIngredient}
                 open={isDrawerOpen}
                 onOpenChange={setIsDrawerOpen}
-                onSave={handleSave}
             />
         </div>
     )

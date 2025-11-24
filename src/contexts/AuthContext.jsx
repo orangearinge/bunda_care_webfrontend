@@ -1,40 +1,34 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useEffect } from "react"
 import { Navigate } from "react-router-dom"
+import useAuthStore from "@/stores/authStore"
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
-        // Check if user is stored in localStorage
-        const stored = localStorage.getItem("admin_user")
-        return stored ? JSON.parse(stored) : null
-    })
+    const { user, isAuthenticated, setAuth, clearAuth } = useAuthStore()
 
-    const login = (email, password) => {
-        // Mock login - accept any email/password
-        const mockUser = {
-            id: 1,
-            name: "Admin User",
-            email: email,
-            role: "ADMIN",
-            avatar: "/avatars/admin.jpg",
+    // Sync with localStorage on mount (in case token exists but zustand state is empty)
+    useEffect(() => {
+        const token = localStorage.getItem("authToken")
+        const storedUser = localStorage.getItem("admin_user")
+
+        // If token exists but zustand state is not authenticated, restore from localStorage
+        if (token && storedUser && !isAuthenticated) {
+            try {
+                const parsedUser = JSON.parse(storedUser)
+                setAuth(parsedUser, token)
+            } catch (error) {
+                // If parsing fails, clear invalid data
+                clearAuth()
+            }
         }
-
-        setUser(mockUser)
-        localStorage.setItem("admin_user", JSON.stringify(mockUser))
-        return Promise.resolve(mockUser)
-    }
-
-    const logout = () => {
-        setUser(null)
-        localStorage.removeItem("admin_user")
-    }
+    }, [])
 
     const value = {
         user,
-        login,
-        logout,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        // We'll handle login through React Query mutation
+        logout: clearAuth,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -58,3 +52,4 @@ export function ProtectedRoute({ children }) {
 
     return children
 }
+

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Drawer,
     DrawerClose,
@@ -11,19 +11,37 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useCreateIngredient, useUpdateIngredient } from "@/hooks/useIngredients"
 import { toast } from "sonner"
 
-export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
-    const [formData, setFormData] = useState(
-        ingredient || {
-            name: "",
-            alt_names: "",
-            calories: 0,
-            protein_g: 0,
-            carbs_g: 0,
-            fat_g: 0,
+export function IngredientForm({ ingredient, open, onOpenChange }) {
+    const [formData, setFormData] = useState({
+        name: "",
+        alt_names: "",
+        calories: 0,
+        protein_g: 0,
+        carbs_g: 0,
+        fat_g: 0,
+    })
+
+    const createIngredientMutation = useCreateIngredient()
+    const updateIngredientMutation = useUpdateIngredient()
+
+    // Update form data when ingredient changes
+    useEffect(() => {
+        if (ingredient) {
+            setFormData(ingredient)
+        } else {
+            setFormData({
+                name: "",
+                alt_names: "",
+                calories: 0,
+                protein_g: 0,
+                carbs_g: 0,
+                fat_g: 0,
+            })
         }
-    )
+    }, [ingredient])
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -33,19 +51,27 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
             return
         }
 
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 1000)),
-            {
-                loading: ingredient ? "Updating ingredient..." : "Creating ingredient...",
-                success: () => {
-                    onSave({ ...formData, id: ingredient?.id || Date.now() })
+        if (ingredient) {
+            // Update existing ingredient
+            updateIngredientMutation.mutate(
+                { id: ingredient.id, data: formData },
+                {
+                    onSuccess: () => {
+                        onOpenChange(false)
+                    },
+                }
+            )
+        } else {
+            // Create new ingredient
+            createIngredientMutation.mutate(formData, {
+                onSuccess: () => {
                     onOpenChange(false)
-                    return ingredient ? "Ingredient updated successfully" : "Ingredient created successfully"
                 },
-                error: "Failed to save ingredient",
-            }
-        )
+            })
+        }
     }
+
+    const isPending = createIngredientMutation.isPending || updateIngredientMutation.isPending
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -72,6 +98,7 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., Brown Rice"
                                 required
+                                disabled={isPending}
                             />
                         </div>
 
@@ -82,6 +109,7 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                 value={formData.alt_names}
                                 onChange={(e) => setFormData({ ...formData, alt_names: e.target.value })}
                                 placeholder="e.g., Beras Merah (optional)"
+                                disabled={isPending}
                             />
                         </div>
 
@@ -98,6 +126,7 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                         setFormData({ ...formData, calories: parseFloat(e.target.value) || 0 })
                                     }
                                     placeholder="0"
+                                    disabled={isPending}
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -112,6 +141,7 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                         setFormData({ ...formData, protein_g: parseFloat(e.target.value) || 0 })
                                     }
                                     placeholder="0"
+                                    disabled={isPending}
                                 />
                             </div>
                         </div>
@@ -129,6 +159,7 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                         setFormData({ ...formData, carbs_g: parseFloat(e.target.value) || 0 })
                                     }
                                     placeholder="0"
+                                    disabled={isPending}
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -143,17 +174,18 @@ export function IngredientForm({ ingredient, open, onOpenChange, onSave }) {
                                         setFormData({ ...formData, fat_g: parseFloat(e.target.value) || 0 })
                                     }
                                     placeholder="0"
+                                    disabled={isPending}
                                 />
                             </div>
                         </div>
                     </div>
                 </form>
                 <DrawerFooter>
-                    <Button onClick={handleSubmit}>
-                        {ingredient ? "Update Ingredient" : "Create Ingredient"}
+                    <Button onClick={handleSubmit} disabled={isPending}>
+                        {isPending ? (ingredient ? "Updating..." : "Creating...") : (ingredient ? "Update Ingredient" : "Create Ingredient")}
                     </Button>
                     <DrawerClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline" disabled={isPending}>Cancel</Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>
