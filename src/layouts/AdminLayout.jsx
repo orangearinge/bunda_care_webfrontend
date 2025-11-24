@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, Link } from "react-router-dom"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -10,6 +10,7 @@ import {
     BreadcrumbSeparator,
     BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 export default function AdminLayout() {
     return (
@@ -22,14 +23,21 @@ export default function AdminLayout() {
                     <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href="/admin">Admin Panel</BreadcrumbLink>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
+                                        Admin Panel
+                                    </Link>
+                                </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                                <BreadcrumbPage className="text-foreground font-medium">Dashboard</BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
+                    <div className="ml-auto">
+                        <ThemeToggle />
+                    </div>
                 </header>
                 <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto @container/main">
                     <Outlet />

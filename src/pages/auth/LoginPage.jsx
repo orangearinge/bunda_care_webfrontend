@@ -36,17 +36,17 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-muted via-background to-muted/50 p-4">
             <div className="w-full max-w-md">
-                <div className="rounded-xl border bg-card shadow-lg p-8">
+                <div className="rounded-xl border border-border bg-card shadow-lg p-8">
                     <form onSubmit={handleSubmit}>
                         <FieldGroup>
                             <div className="flex flex-col items-center gap-2 text-center mb-8">
-                                <div className="flex size-14 items-center justify-center rounded-lg bg-primary/10">
+                                <div className="flex size-14 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/20">
                                     <IconInnerShadowTop className="size-7 text-primary" />
                                 </div>
-                                <h1 className="text-2xl font-bold tracking-tight">Bunda Care Admin</h1>
-                                <FieldDescription className="text-base">
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground">Bunda Care Admin</h1>
+                                <FieldDescription className="text-base text-muted-foreground">
                                     Enter your credentials to access the admin panel
                                 </FieldDescription>
                             </div>
