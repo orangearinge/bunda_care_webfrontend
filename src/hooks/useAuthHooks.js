@@ -24,3 +24,23 @@ export const useLogin = () => {
         },
     })
 }
+
+// Logout mutation hook
+export const useLogout = () => {
+    const { clearAuth } = useAuthStore()
+
+    return useMutation({
+        mutationFn: authApi.logout,
+        onSuccess: () => {
+            // Clear auth state
+            clearAuth()
+            toast.success("Logged out successfully!")
+        },
+        onError: (error) => {
+            // Even if the API call fails, we should still clear local auth state
+            clearAuth()
+            console.error("Logout error:", error)
+            toast.info("Logged out locally")
+        },
+    })
+}

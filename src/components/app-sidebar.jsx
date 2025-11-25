@@ -30,13 +30,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import useAuthStore from "@/stores/authStore"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -76,6 +72,15 @@ const data = {
 export function AppSidebar({
   ...props
 }) {
+  const user = useAuthStore((state) => state.user)
+
+  // Prepare user data with fallback values
+  const userData = {
+    name: user?.fullname || user?.username || "Admin User",
+    email: user?.email || "admin@bundacare.com",
+    avatar: user?.avatar || "/avatars/default.jpg",
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -95,7 +100,7 @@ export function AppSidebar({
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   );
