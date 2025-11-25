@@ -173,9 +173,10 @@ export default function UsersPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Roles</SelectItem>
-                            <SelectItem value="USER">USER</SelectItem>
                             <SelectItem value="ADMIN">ADMIN</SelectItem>
-                            <SelectItem value="MODERATOR">MODERATOR</SelectItem>
+                            <SelectItem value="IBU_HAMIL">IBU_HAMIL</SelectItem>
+                            <SelectItem value="IBU_MENYUSUI">IBU_MENYUSUI</SelectItem>
+                            <SelectItem value="ANAK_BALITA">ANAK_BALITA</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

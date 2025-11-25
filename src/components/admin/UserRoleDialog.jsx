@@ -18,10 +18,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { useUpdateUserRole } from "@/hooks/useUsers"
 
-const roles = ["USER", "ADMIN", "MODERATOR"]
+const roles = ["ADMIN", "IBU_HAMIL", "IBU_MENYUSUI", "ANAK_BALITA"]
 
 export function UserRoleDialog({ user, open, onOpenChange }) {
-    const [selectedRole, setSelectedRole] = useState(user?.role || "USER")
+    const [selectedRole, setSelectedRole] = useState(user?.role || "IBU_HAMIL")
     const updateRoleMutation = useUpdateUserRole()
 
     // Update selected role when user changes
