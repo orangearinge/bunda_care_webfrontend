@@ -15,9 +15,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function IngredientPicker({ value = [], onChange, disabled }) {
     const [ingredients, setIngredients] = useState(value)
-    const { data, isLoading } = useIngredients()
+    // Fetch all ingredients for picker (use high limit to get all)
+    const { data, isLoading } = useIngredients({ limit: 1000 })
 
-    const availableIngredients = Array.isArray(data) ? data : data?.items || []
+    // Handle paginated response
+    const availableIngredients = data?.items || []
 
     // Sync with parent value
     useEffect(() => {

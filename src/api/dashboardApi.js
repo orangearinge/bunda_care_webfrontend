@@ -9,8 +9,10 @@ export const dashboardApi = {
     },
 
     // Get user growth data
-    getUserGrowth: async () => {
-        const response = await apiClient.get("/admin/dashboard/user-growth")
+    getUserGrowth: async (days = 30) => {
+        const response = await apiClient.get("/admin/dashboard/user-growth", {
+            params: { days }
+        })
         return response.data
     },
 }

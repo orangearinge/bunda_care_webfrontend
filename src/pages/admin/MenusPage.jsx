@@ -45,20 +45,28 @@ import { Skeleton } from "@/components/ui/skeleton"
 export default function MenusPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [mealTypeFilter, setMealTypeFilter] = useState("ALL")
+    const [statusFilter, setStatusFilter] = useState("ALL")
     const [editingMenu, setEditingMenu] = useState(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+    const [page, setPage] = useState(1)
+    const [limit] = useState(10)
 
     // Build query params
     const queryParams = {
+        page,
+        limit,
         ...(searchQuery && { search: searchQuery }),
         ...(mealTypeFilter !== "ALL" && { meal_type: mealTypeFilter }),
+        ...(statusFilter !== "ALL" && { is_active: statusFilter === "ACTIVE" }),
     }
 
     // Fetch menus with React Query
     const { data, isLoading, isError } = useMenus(queryParams)
     const deleteMenuMutation = useDeleteMenu()
 
-    const menus = Array.isArray(data) ? data : data?.items || []
+    const menus = data?.items || []
+    const totalPages = data?.pages || 1
+    const total = data?.total || 0
 
     const columns = [
         {
@@ -164,7 +172,17 @@ export default function MenusPage() {
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
+        manualPagination: true,
+        pageCount: totalPages,
     })
+
+    const handlePrevious = () => {
+        if (page > 1) setPage(page - 1)
+    }
+
+    const handleNext = () => {
+        if (page < totalPages) setPage(page + 1)
+    }
 
     const handleCreateNew = () => {
         setEditingMenu(null)
@@ -197,21 +215,38 @@ export default function MenusPage() {
                         onClear={() => setSearchQuery("")}
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Label htmlFor="meal-filter" className="text-sm font-medium">
-                        Meal Type:
-                    </Label>
-                    <Select value={mealTypeFilter} onValueChange={setMealTypeFilter}>
-                        <SelectTrigger id="meal-filter" className="w-[140px]" size="sm">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">All Types</SelectItem>
-                            <SelectItem value="BREAKFAST">BREAKFAST</SelectItem>
-                            <SelectItem value="LUNCH">LUNCH</SelectItem>
-                            <SelectItem value="DINNER">DINNER</SelectItem>
-                        </SelectContent>
-                    </Select>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="meal-filter" className="text-sm font-medium">
+                            Meal Type:
+                        </Label>
+                        <Select value={mealTypeFilter} onValueChange={setMealTypeFilter}>
+                            <SelectTrigger id="meal-filter" className="w-[140px]" size="sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Types</SelectItem>
+                                <SelectItem value="BREAKFAST">BREAKFAST</SelectItem>
+                                <SelectItem value="LUNCH">LUNCH</SelectItem>
+                                <SelectItem value="DINNER">DINNER</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="status-filter" className="text-sm font-medium">
+                            Status:
+                        </Label>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger id="status-filter" className="w-[140px]" size="sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Status</SelectItem>
+                                <SelectItem value="ACTIVE">Active</SelectItem>
+                                <SelectItem value="INACTIVE">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
@@ -267,6 +302,43 @@ export default function MenusPage() {
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                    {isLoading ? (
+                        "Loading..."
+                    ) : (
+                        <>
+                            Showing {(page - 1) * limit + 1} to{" "}
+                            {Math.min(page * limit, total)} of {total} menus
+                        </>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePrevious}
+                        disabled={page === 1 || isLoading}
+                    >
+                        <IconChevronLeft className="size-4" />
+                        Previous
+                    </Button>
+                    <div className="text-sm">
+                        Page {page} of {totalPages}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNext}
+                        disabled={page >= totalPages || isLoading}
+                    >
+                        Next
+                        <IconChevronRight className="size-4" />
+                    </Button>
+                </div>
             </div>
 
             {/* Create/Edit Menu Drawer */}

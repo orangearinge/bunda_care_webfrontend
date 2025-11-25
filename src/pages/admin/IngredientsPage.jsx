@@ -37,9 +37,13 @@ export default function IngredientsPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [editingIngredient, setEditingIngredient] = useState(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+    const [page, setPage] = useState(1)
+    const [limit] = useState(10)
 
     // Build query params
     const queryParams = {
+        page,
+        limit,
         ...(searchQuery && { search: searchQuery }),
     }
 
@@ -47,7 +51,9 @@ export default function IngredientsPage() {
     const { data, isLoading, isError } = useIngredients(queryParams)
     const deleteIngredientMutation = useDeleteIngredient()
 
-    const ingredients = Array.isArray(data) ? data : data?.items || []
+    const ingredients = data?.items || []
+    const totalPages = data?.pages || 1
+    const total = data?.total || 0
 
     const columns = [
         {
@@ -142,7 +148,17 @@ export default function IngredientsPage() {
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
+        manualPagination: true,
+        pageCount: totalPages,
     })
+
+    const handlePrevious = () => {
+        if (page > 1) setPage(page - 1)
+    }
+
+    const handleNext = () => {
+        if (page < totalPages) setPage(page + 1)
+    }
 
     const handleCreateNew = () => {
         setEditingIngredient(null)
@@ -227,6 +243,43 @@ export default function IngredientsPage() {
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                    {isLoading ? (
+                        "Loading..."
+                    ) : (
+                        <>
+                            Showing {(page - 1) * limit + 1} to{" "}
+                            {Math.min(page * limit, total)} of {total} ingredients
+                        </>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePrevious}
+                        disabled={page === 1 || isLoading}
+                    >
+                        <IconChevronLeft className="size-4" />
+                        Previous
+                    </Button>
+                    <div className="text-sm">
+                        Page {page} of {totalPages}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNext}
+                        disabled={page >= totalPages || isLoading}
+                    >
+                        Next
+                        <IconChevronRight className="size-4" />
+                    </Button>
+                </div>
             </div>
 
             {/* Create/Edit Ingredient Drawer */}

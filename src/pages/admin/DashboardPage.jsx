@@ -5,6 +5,14 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { StatsCard } from "@/components/admin/StatsCard"
 import { useDashboardStats, useUserGrowth } from "@/hooks/useDashboard"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 const chartConfig = {
     count: {
@@ -14,8 +22,9 @@ const chartConfig = {
 }
 
 export default function DashboardPage() {
+    const [days, setDays] = React.useState(30)
     const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
-    const { data: userGrowthData, isLoading: growthLoading, isError: growthError } = useUserGrowth()
+    const { data: userGrowthData, isLoading: growthLoading, isError: growthError } = useUserGrowth(days)
 
     return (
         <div className="flex flex-col gap-6">
@@ -80,10 +89,29 @@ export default function DashboardPage() {
             {/* User Growth Chart */}
             <Card className="@container/card">
                 <CardHeader>
-                    <CardTitle>User Growth</CardTitle>
-                    <CardDescription>
-                        Total registered users over time
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>User Growth</CardTitle>
+                            <CardDescription>
+                                Total registered users over time
+                            </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="days-filter" className="text-sm font-medium">
+                                Range:
+                            </Label>
+                            <Select value={days.toString()} onValueChange={(val) => setDays(Number(val))}>
+                                <SelectTrigger id="days-filter" className="w-[140px]" size="sm">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="7">Last 7 days</SelectItem>
+                                    <SelectItem value="30">Last 30 days</SelectItem>
+                                    <SelectItem value="90">Last 90 days</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
                     {growthLoading ? (
