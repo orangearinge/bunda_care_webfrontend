@@ -5,7 +5,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { IconChevronLeft, IconChevronRight, IconDotsVertical, IconUserEdit } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconDotsVertical, IconUserEdit, IconUsers } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -32,8 +32,10 @@ import {
 import { Label } from "@/components/ui/label"
 import { UserRoleDialog } from "@/components/admin/UserRoleDialog"
 import { SearchBar } from "@/components/admin/SearchBar"
+import { EmptyState } from "@/components/admin/EmptyState"
+import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useUsers } from "@/hooks/useUsers"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -43,16 +45,22 @@ export default function UsersPage() {
     const [page, setPage] = useState(1)
     const [limit] = useState(10)
 
+    // Debounce search query untuk mengurangi API calls
+    const debouncedSearchQuery = useDebounce(searchQuery, 500)
+
     // Build query params
     const queryParams = {
         page,
         limit,
-        ...(searchQuery && { search: searchQuery }),
+        ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
         ...(roleFilter !== "ALL" && { role: roleFilter }),
     }
 
     // Fetch users with React Query
-    const { data, isLoading, isError } = useUsers(queryParams)
+    const { data, isLoading, isError, isFetching } = useUsers(queryParams)
+
+    // Cek apakah sedang searching (user mengetik tapi belum di-debounce)
+    const isSearching = searchQuery !== debouncedSearchQuery
 
     const users = data?.items || []
     const totalPages = data?.pages || 1
@@ -161,6 +169,7 @@ export default function UsersPage() {
                         onChange={setSearchQuery}
                         placeholder="Search by name or email..."
                         onClear={() => setSearchQuery("")}
+                        isLoading={isSearching || isFetching}
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -203,22 +212,14 @@ export default function UsersPage() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            [...Array(5)].map((_, i) => (
-                                <TableRow key={i}>
-                                    {columns.map((_, j) => (
-                                        <TableCell key={j}>
-                                            <Skeleton className="h-6 w-full" />
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            <TableSkeleton rows={5} columns={columns.length} />
                         ) : isError ? (
                             <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center text-destructive"
-                                >
-                                    Failed to load users
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        title="Failed to load users"
+                                        description="There was an error loading the user data. Please try again."
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : table.getRowModel().rows?.length ? (
@@ -226,6 +227,7 @@ export default function UsersPage() {
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className="transition-colors"
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -239,11 +241,14 @@ export default function UsersPage() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No users found.
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        icon={IconUsers}
+                                        title="No users found"
+                                        description={searchQuery || roleFilter !== "ALL"
+                                            ? "No users match your search criteria. Try adjusting your filters."
+                                            : "No users have been registered yet."}
+                                    />
                                 </TableCell>
                             </TableRow>
                         )}

@@ -192,3 +192,42 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Shimmer animation untuk skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Fade in animation untuk konten */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply shimmer effect ke skeleton */
+[data-skeleton] {
+  background: linear-gradient(90deg,
+      var(--muted) 0%,
+      var(--accent) 50%,
+      var(--muted) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Smooth transition untuk table rows */
+.transition-colors {
+  transition: background-color 0.15s ease-in-out;
+}

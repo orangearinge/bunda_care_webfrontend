@@ -12,6 +12,7 @@ import {
     IconEdit,
     IconPlus,
     IconTrash,
+    IconCarrot,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,8 +31,10 @@ import {
 } from "@/components/ui/table"
 import { IngredientForm } from "@/components/admin/IngredientForm"
 import { SearchBar } from "@/components/admin/SearchBar"
+import { EmptyState } from "@/components/admin/EmptyState"
+import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useIngredients, useDeleteIngredient } from "@/hooks/useIngredients"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function IngredientsPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -40,16 +43,22 @@ export default function IngredientsPage() {
     const [page, setPage] = useState(1)
     const [limit] = useState(10)
 
+    // Debounce search query untuk mengurangi API calls
+    const debouncedSearchQuery = useDebounce(searchQuery, 500)
+
     // Build query params
     const queryParams = {
         page,
         limit,
-        ...(searchQuery && { search: searchQuery }),
+        ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
     }
 
     // Fetch ingredients with React Query
-    const { data, isLoading, isError } = useIngredients(queryParams)
+    const { data, isLoading, isError, isFetching } = useIngredients(queryParams)
     const deleteIngredientMutation = useDeleteIngredient()
+
+    // Cek apakah sedang searching
+    const isSearching = searchQuery !== debouncedSearchQuery
 
     const ingredients = data?.items || []
     const totalPages = data?.pages || 1
@@ -188,6 +197,7 @@ export default function IngredientsPage() {
                     onChange={setSearchQuery}
                     placeholder="Search ingredients..."
                     onClear={() => setSearchQuery("")}
+                    isLoading={isSearching || isFetching}
                 />
             </div>
 
@@ -209,24 +219,19 @@ export default function IngredientsPage() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            [...Array(5)].map((_, i) => (
-                                <TableRow key={i}>
-                                    {columns.map((_, j) => (
-                                        <TableCell key={j}>
-                                            <Skeleton className="h-6 w-full" />
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            <TableSkeleton rows={5} columns={columns.length} />
                         ) : isError ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center text-destructive">
-                                    Failed to load ingredients
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        title="Failed to load ingredients"
+                                        description="There was an error loading the ingredient data. Please try again."
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
+                                <TableRow key={row.id} className="transition-colors">
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -236,8 +241,20 @@ export default function IngredientsPage() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No ingredients found.
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        icon={IconCarrot}
+                                        title="No ingredients found"
+                                        description={searchQuery
+                                            ? "No ingredients match your search criteria. Try a different search term."
+                                            : "No ingredients have been added yet."}
+                                        action={
+                                            <Button onClick={handleCreateNew} size="sm">
+                                                <IconPlus className="mr-2 size-4" />
+                                                Add Your First Ingredient
+                                            </Button>
+                                        }
+                                    />
                                 </TableCell>
                             </TableRow>
                         )}

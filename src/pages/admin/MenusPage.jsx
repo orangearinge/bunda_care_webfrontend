@@ -12,6 +12,7 @@ import {
     IconEdit,
     IconPlus,
     IconTrash,
+    IconToolsKitchen2,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -39,8 +40,10 @@ import {
 import { Label } from "@/components/ui/label"
 import { MenuForm } from "@/components/admin/MenuForm"
 import { SearchBar } from "@/components/admin/SearchBar"
+import { EmptyState } from "@/components/admin/EmptyState"
+import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useMenus, useDeleteMenu } from "@/hooks/useMenus"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function MenusPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -51,18 +54,24 @@ export default function MenusPage() {
     const [page, setPage] = useState(1)
     const [limit] = useState(10)
 
+    // Debounce search query untuk mengurangi API calls
+    const debouncedSearchQuery = useDebounce(searchQuery, 500)
+
     // Build query params
     const queryParams = {
         page,
         limit,
-        ...(searchQuery && { search: searchQuery }),
+        ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
         ...(mealTypeFilter !== "ALL" && { meal_type: mealTypeFilter }),
         ...(statusFilter !== "ALL" && { is_active: statusFilter === "ACTIVE" }),
     }
 
     // Fetch menus with React Query
-    const { data, isLoading, isError } = useMenus(queryParams)
+    const { data, isLoading, isError, isFetching } = useMenus(queryParams)
     const deleteMenuMutation = useDeleteMenu()
+
+    // Cek apakah sedang searching
+    const isSearching = searchQuery !== debouncedSearchQuery
 
     const menus = data?.items || []
     const totalPages = data?.pages || 1
@@ -213,6 +222,7 @@ export default function MenusPage() {
                         onChange={setSearchQuery}
                         placeholder="Search menus..."
                         onClear={() => setSearchQuery("")}
+                        isLoading={isSearching || isFetching}
                     />
                 </div>
                 <div className="flex items-center gap-4">
@@ -268,24 +278,19 @@ export default function MenusPage() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            [...Array(5)].map((_, i) => (
-                                <TableRow key={i}>
-                                    {columns.map((_, j) => (
-                                        <TableCell key={j}>
-                                            <Skeleton className="h-6 w-full" />
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            <TableSkeleton rows={5} columns={columns.length} />
                         ) : isError ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center text-destructive">
-                                    Failed to load menus
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        title="Failed to load menus"
+                                        description="There was an error loading the menu data. Please try again."
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
+                                <TableRow key={row.id} className="transition-colors">
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -295,8 +300,20 @@ export default function MenusPage() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No menus found.
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <EmptyState
+                                        icon={IconToolsKitchen2}
+                                        title="No menus found"
+                                        description={searchQuery || mealTypeFilter !== "ALL" || statusFilter !== "ALL"
+                                            ? "No menus match your search criteria. Try adjusting your filters."
+                                            : "No menus have been created yet."}
+                                        action={
+                                            <Button onClick={handleCreateNew} size="sm">
+                                                <IconPlus className="mr-2 size-4" />
+                                                Create Your First Menu
+                                            </Button>
+                                        }
+                                    />
                                 </TableCell>
                             </TableRow>
                         )}
