@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import {
     Drawer,
     DrawerClose,
@@ -21,28 +23,37 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { IngredientPicker } from "@/components/admin/IngredientPicker"
 import { useCreateMenu, useUpdateMenu } from "@/hooks/useMenus"
-import { toast } from "sonner"
+import { menuSchema } from "@/schemas/menuSchemas"
 
 const mealTypes = ["BREAKFAST", "LUNCH", "DINNER"]
 
 export function MenuForm({ menu, open, onOpenChange }) {
-    const [formData, setFormData] = useState({
-        name: "",
-        meal_type: "BREAKFAST",
-        tags: "",
-        is_active: true,
-        ingredients: [],
-    })
-
     const createMenuMutation = useCreateMenu()
     const updateMenuMutation = useUpdateMenu()
+
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(menuSchema),
+        defaultValues: {
+            name: "",
+            meal_type: "BREAKFAST",
+            tags: "",
+            is_active: true,
+            ingredients: [],
+        },
+    })
 
     // Update form data when menu changes
     useEffect(() => {
         if (menu) {
-            setFormData(menu)
+            reset(menu)
         } else {
-            setFormData({
+            reset({
                 name: "",
                 meal_type: "BREAKFAST",
                 tags: "",
@@ -50,20 +61,13 @@ export function MenuForm({ menu, open, onOpenChange }) {
                 ingredients: [],
             })
         }
-    }, [menu])
+    }, [menu, reset])
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-
-        if (!formData.name || !formData.meal_type || formData.ingredients.length === 0) {
-            toast.error("Please fill in all required fields and add at least one ingredient")
-            return
-        }
-
+    const onSubmit = (data) => {
         if (menu) {
             // Update existing menu
             updateMenuMutation.mutate(
-                { id: menu.id, data: formData },
+                { id: menu.id, data },
                 {
                     onSuccess: () => {
                         onOpenChange(false)
@@ -72,7 +76,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
             )
         } else {
             // Create new menu
-            createMenuMutation.mutate(formData, {
+            createMenuMutation.mutate(data, {
                 onSuccess: () => {
                     onOpenChange(false)
                 },
@@ -81,6 +85,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
     }
 
     const isPending = createMenuMutation.isPending || updateMenuMutation.isPending
+
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -91,7 +96,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                         {menu ? "Update menu details and ingredients" : "Add a new menu to your collection"}
                     </DrawerDescription>
                 </DrawerHeader>
-                <form onSubmit={handleSubmit} className="overflow-y-auto px-4 pb-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto px-4 pb-4">
                     <div className="space-y-4 max-h-[60vh]">
                         <div className="grid gap-2">
                             <Label htmlFor="name">
@@ -99,68 +104,95 @@ export function MenuForm({ menu, open, onOpenChange }) {
                             </Label>
                             <Input
                                 id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                {...register("name")}
                                 placeholder="e.g., Healthy Breakfast Bowl"
-                                required
                                 disabled={isPending}
                             />
+                            {errors.name && (
+                                <p className="text-sm text-destructive">{errors.name.message}</p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="meal_type">
                                 Meal Type <span className="text-destructive">*</span>
                             </Label>
-                            <Select
-                                value={formData.meal_type}
-                                onValueChange={(value) => setFormData({ ...formData, meal_type: value })}
-                                disabled={isPending}
-                            >
-                                <SelectTrigger id="meal_type">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {mealTypes.map((type) => (
-                                        <SelectItem key={type} value={type}>
-                                            {type}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="meal_type"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        disabled={isPending}
+                                    >
+                                        <SelectTrigger id="meal_type">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {mealTypes.map((type) => (
+                                                <SelectItem key={type} value={type}>
+                                                    {type}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.meal_type && (
+                                <p className="text-sm text-destructive">{errors.meal_type.message}</p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="tags">Tags</Label>
                             <Input
                                 id="tags"
-                                value={formData.tags}
-                                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                                {...register("tags")}
                                 placeholder="e.g., healthy,protein,fiber (comma separated)"
                                 disabled={isPending}
                             />
+                            {errors.tags && (
+                                <p className="text-sm text-destructive">{errors.tags.message}</p>
+                            )}
                         </div>
 
                         <div className="flex items-center justify-between">
                             <Label htmlFor="is_active">Active Status</Label>
-                            <Switch
-                                id="is_active"
-                                checked={formData.is_active}
-                                onCheckedChange={(checked) =>
-                                    setFormData({ ...formData, is_active: checked })
-                                }
-                                disabled={isPending}
+                            <Controller
+                                name="is_active"
+                                control={control}
+                                render={({ field }) => (
+                                    <Switch
+                                        id="is_active"
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        disabled={isPending}
+                                    />
+                                )}
                             />
                         </div>
 
-                        <IngredientPicker
-                            value={formData.ingredients}
-                            onChange={(ingredients) => setFormData({ ...formData, ingredients })}
-                            disabled={isPending}
-                        />
+                        <div className="grid gap-2">
+                            <Controller
+                                name="ingredients"
+                                control={control}
+                                render={({ field }) => (
+                                    <IngredientPicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isPending}
+                                    />
+                                )}
+                            />
+                            {errors.ingredients && (
+                                <p className="text-sm text-destructive">{errors.ingredients.message}</p>
+                            )}
+                        </div>
                     </div>
                 </form>
                 <DrawerFooter>
-                    <Button onClick={handleSubmit} disabled={isPending}>
+                    <Button onClick={handleSubmit(onSubmit)} disabled={isPending}>
                         {isPending ? (menu ? "Updating..." : "Creating...") : (menu ? "Update Menu" : "Create Menu")}
                     </Button>
                     <DrawerClose asChild>

@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import {
     Drawer,
     DrawerClose,
@@ -12,27 +14,35 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useCreateIngredient, useUpdateIngredient } from "@/hooks/useIngredients"
-import { toast } from "sonner"
+import { ingredientSchema } from "@/schemas/ingredientSchemas"
 
 export function IngredientForm({ ingredient, open, onOpenChange }) {
-    const [formData, setFormData] = useState({
-        name: "",
-        alt_names: "",
-        calories: 0,
-        protein_g: 0,
-        carbs_g: 0,
-        fat_g: 0,
-    })
-
     const createIngredientMutation = useCreateIngredient()
     const updateIngredientMutation = useUpdateIngredient()
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(ingredientSchema),
+        defaultValues: {
+            name: "",
+            alt_names: "",
+            calories: 0,
+            protein_g: 0,
+            carbs_g: 0,
+            fat_g: 0,
+        },
+    })
 
     // Update form data when ingredient changes
     useEffect(() => {
         if (ingredient) {
-            setFormData(ingredient)
+            reset(ingredient)
         } else {
-            setFormData({
+            reset({
                 name: "",
                 alt_names: "",
                 calories: 0,
@@ -41,20 +51,13 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                 fat_g: 0,
             })
         }
-    }, [ingredient])
+    }, [ingredient, reset])
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-
-        if (!formData.name) {
-            toast.error("Please enter an ingredient name")
-            return
-        }
-
+    const onSubmit = (data) => {
         if (ingredient) {
             // Update existing ingredient
             updateIngredientMutation.mutate(
-                { id: ingredient.id, data: formData },
+                { id: ingredient.id, data },
                 {
                     onSuccess: () => {
                         onOpenChange(false)
@@ -63,7 +66,7 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
             )
         } else {
             // Create new ingredient
-            createIngredientMutation.mutate(formData, {
+            createIngredientMutation.mutate(data, {
                 onSuccess: () => {
                     onOpenChange(false)
                 },
@@ -72,6 +75,7 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
     }
 
     const isPending = createIngredientMutation.isPending || updateIngredientMutation.isPending
+
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -86,7 +90,7 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                             : "Add a new ingredient to the database"}
                     </DrawerDescription>
                 </DrawerHeader>
-                <form onSubmit={handleSubmit} className="overflow-y-auto px-4 pb-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto px-4 pb-4">
                     <div className="space-y-4 max-h-[60vh]">
                         <div className="grid gap-2">
                             <Label htmlFor="name">
@@ -94,23 +98,26 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                             </Label>
                             <Input
                                 id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                {...register("name")}
                                 placeholder="e.g., Brown Rice"
-                                required
                                 disabled={isPending}
                             />
+                            {errors.name && (
+                                <p className="text-sm text-destructive">{errors.name.message}</p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="alt_names">Alternative Names</Label>
                             <Input
                                 id="alt_names"
-                                value={formData.alt_names}
-                                onChange={(e) => setFormData({ ...formData, alt_names: e.target.value })}
+                                {...register("alt_names")}
                                 placeholder="e.g., Beras Merah (optional)"
                                 disabled={isPending}
                             />
+                            {errors.alt_names && (
+                                <p className="text-sm text-destructive">{errors.alt_names.message}</p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -121,13 +128,13 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                                     type="number"
                                     step="0.1"
                                     min="0"
-                                    value={formData.calories}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, calories: parseFloat(e.target.value) || 0 })
-                                    }
+                                    {...register("calories", { valueAsNumber: true })}
                                     placeholder="0"
                                     disabled={isPending}
                                 />
+                                {errors.calories && (
+                                    <p className="text-sm text-destructive">{errors.calories.message}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="protein">Protein (g)</Label>
@@ -136,13 +143,13 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                                     type="number"
                                     step="0.1"
                                     min="0"
-                                    value={formData.protein_g}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, protein_g: parseFloat(e.target.value) || 0 })
-                                    }
+                                    {...register("protein_g", { valueAsNumber: true })}
                                     placeholder="0"
                                     disabled={isPending}
                                 />
+                                {errors.protein_g && (
+                                    <p className="text-sm text-destructive">{errors.protein_g.message}</p>
+                                )}
                             </div>
                         </div>
 
@@ -154,13 +161,13 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                                     type="number"
                                     step="0.1"
                                     min="0"
-                                    value={formData.carbs_g}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, carbs_g: parseFloat(e.target.value) || 0 })
-                                    }
+                                    {...register("carbs_g", { valueAsNumber: true })}
                                     placeholder="0"
                                     disabled={isPending}
                                 />
+                                {errors.carbs_g && (
+                                    <p className="text-sm text-destructive">{errors.carbs_g.message}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="fat">Fat (g)</Label>
@@ -169,19 +176,19 @@ export function IngredientForm({ ingredient, open, onOpenChange }) {
                                     type="number"
                                     step="0.1"
                                     min="0"
-                                    value={formData.fat_g}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, fat_g: parseFloat(e.target.value) || 0 })
-                                    }
+                                    {...register("fat_g", { valueAsNumber: true })}
                                     placeholder="0"
                                     disabled={isPending}
                                 />
+                                {errors.fat_g && (
+                                    <p className="text-sm text-destructive">{errors.fat_g.message}</p>
+                                )}
                             </div>
                         </div>
                     </div>
                 </form>
                 <DrawerFooter>
-                    <Button onClick={handleSubmit} disabled={isPending}>
+                    <Button onClick={handleSubmit(onSubmit)} disabled={isPending}>
                         {isPending ? (ingredient ? "Updating..." : "Creating...") : (ingredient ? "Update Ingredient" : "Create Ingredient")}
                     </Button>
                     <DrawerClose asChild>
