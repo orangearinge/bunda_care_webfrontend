@@ -10,12 +10,14 @@ export const menuSchema = z.object({
         errorMap: () => ({ message: "Please select a valid meal type" }),
     }),
     tags: z.string().optional(),
+    image_url: z.string().optional().nullable(),
     is_active: z.boolean().default(true),
     ingredients: z
         .array(
             z.object({
-                id: z.number(),
-                name: z.string(),
+                ingredient_id: z.union([z.number(), z.string()]).optional(),
+                id: z.number().optional(),
+                name: z.string().optional(),
                 quantity_g: z.number().min(0, "Quantity must be positive"),
             })
         )

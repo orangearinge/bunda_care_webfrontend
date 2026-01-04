@@ -22,6 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { IngredientPicker } from "@/components/admin/IngredientPicker"
+import { ImageUpload } from "@/components/admin/ImageUpload"
 import { useCreateMenu, useUpdateMenu } from "@/hooks/useMenus"
 import { menuSchema } from "@/schemas/menuSchemas"
 
@@ -43,6 +44,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
             name: "",
             meal_type: "BREAKFAST",
             tags: "",
+            image_url: "",
             is_active: true,
             ingredients: [],
         },
@@ -51,12 +53,23 @@ export function MenuForm({ menu, open, onOpenChange }) {
     // Update form data when menu changes
     useEffect(() => {
         if (menu) {
-            reset(menu)
+            // Format menu data for form
+            const formattedMenu = {
+                ...menu,
+                ingredients: menu.ingredients?.map(ing => ({
+                    ingredient_id: ing.ingredient_id || ing.id,
+                    quantity_g: ing.quantity_g,
+                    name: ing.name // Keep name for display
+                })) || []
+            }
+            console.log('Loading menu for edit:', formattedMenu) // Debug log
+            reset(formattedMenu)
         } else {
             reset({
                 name: "",
                 meal_type: "BREAKFAST",
                 tags: "",
+                image_url: "",
                 is_active: true,
                 ingredients: [],
             })
@@ -64,10 +77,36 @@ export function MenuForm({ menu, open, onOpenChange }) {
     }, [menu, reset])
 
     const onSubmit = (data) => {
+        // Format ingredients data for API
+        const formattedIngredients = data.ingredients
+            .map(ing => {
+                const ingredientId = ing.ingredient_id || ing.id
+                const quantityG = ing.quantity_g
+
+                // Skip if no ingredient_id or quantity
+                if (!ingredientId || !quantityG) {
+                    console.warn('Skipping invalid ingredient:', ing)
+                    return null
+                }
+
+                return {
+                    ingredient_id: typeof ingredientId === 'string' ? parseInt(ingredientId) : ingredientId,
+                    quantity_g: typeof quantityG === 'string' ? parseFloat(quantityG) : quantityG
+                }
+            })
+            .filter(ing => ing !== null) // Remove null entries
+
+        const formattedData = {
+            ...data,
+            ingredients: formattedIngredients
+        }
+
+        console.log('Submitting menu data:', formattedData) // Debug log
+
         if (menu) {
             // Update existing menu
             updateMenuMutation.mutate(
-                { id: menu.id, data },
+                { id: menu.id, data: formattedData },
                 {
                     onSuccess: () => {
                         onOpenChange(false)
@@ -76,7 +115,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
             )
         } else {
             // Create new menu
-            createMenuMutation.mutate(data, {
+            createMenuMutation.mutate(formattedData, {
                 onSuccess: () => {
                     onOpenChange(false)
                 },
@@ -155,6 +194,20 @@ export function MenuForm({ menu, open, onOpenChange }) {
                             {errors.tags && (
                                 <p className="text-sm text-destructive">{errors.tags.message}</p>
                             )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Controller
+                                name="image_url"
+                                control={control}
+                                render={({ field }) => (
+                                    <ImageUpload
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isPending}
+                                    />
+                                )}
+                            />
                         </div>
 
                         <div className="flex items-center justify-between">

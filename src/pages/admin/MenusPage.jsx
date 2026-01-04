@@ -13,6 +13,7 @@ import {
     IconPlus,
     IconTrash,
     IconToolsKitchen2,
+    IconPhoto,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -86,7 +87,25 @@ export default function MenusPage() {
         {
             accessorKey: "name",
             header: "Name",
-            cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+            cell: ({ row }) => {
+                const imageUrl = row.original.image_url
+                return (
+                    <div className="flex items-center gap-3">
+                        {imageUrl ? (
+                            <img
+                                src={imageUrl}
+                                alt={row.getValue("name")}
+                                className="w-10 h-10 object-cover rounded-md border"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 bg-muted rounded-md border flex items-center justify-center">
+                                <IconPhoto className="size-4 text-muted-foreground" />
+                            </div>
+                        )}
+                        <div className="font-medium">{row.getValue("name")}</div>
+                    </div>
+                )
+            },
         },
         {
             accessorKey: "meal_type",
