@@ -1,26 +1,44 @@
-# Bunda Care Web Frontend
+# Bunda Care Admin Dashboard
 
-Selamat datang di repositori Bunda Care Web Frontend! Proyek ini adalah antarmuka pengguna (frontend) untuk aplikasi Bunda Care, yang dirancang untuk mendukung ibu hamil dan menyusui. Dibangun dengan React dan Vite, aplikasi ini menyediakan pengalaman yang responsif dan interaktif.
+Selamat datang di repositori Bunda Care Admin Dashboard! Proyek ini berfungsi sebagai antarmuka administrasi (web frontend) untuk mengelola data dan fungsionalitas aplikasi Bunda Care Mobile. Dibangun dengan React dan Vite, dashboard ini dirancang untuk memberikan pengalaman yang efisien dan responsif bagi administrator.
+
+## Tujuan Proyek
+
+Tujuan utama dari dashboard ini adalah untuk menyediakan alat yang komprehensif bagi administrator Bunda Care untuk:
+
+*   Mengelola pengguna dan profil mereka.
+*   Mengelola konten informasi (artikel, panduan, dll.).
+*   Memantau data penting terkait aplikasi mobile.
+*   Mengelola jadwal atau konfigurasi tertentu yang relevan dengan fungsionalitas aplikasi.
 
 ## Fitur Utama (Contoh)
 
-*   **Dashboard Personal:** Tampilan ringkasan informasi relevan untuk pengguna.
-*   **Informasi Kehamilan/Menyusui:** Artikel, panduan, dan tips seputar kehamilan dan menyusui.
-*   **Jadwal Imunisasi Anak:** Pencatatan dan pengingat jadwal imunisasi.
-*   **Pelacakan Pertumbuhan Bayi:** Modul untuk mencatat dan memantau tumbuh kembang bayi.
-*   **Manajemen Profil Pengguna:** Pengaturan dan personalisasi akun.
-
-*(Catatan: Fitur-fitur di atas adalah contoh umum. Anda dapat mengubahnya sesuai dengan implementasi proyek Anda yang sebenarnya.)*
+*   **Manajemen Pengguna:** Melihat, menambah, mengedit, dan menghapus data pengguna aplikasi mobile.
+*   **Manajemen Konten:** Mengelola artikel, tips, atau sumber daya informasi lainnya yang ditampilkan di aplikasi.
+*   **Pelacakan Statistik:** Menampilkan grafik dan data analitik terkait penggunaan aplikasi dan pertumbuhan bayi.
+*   **Sistem Notifikasi:** Mengirim notifikasi atau pengumuman kepada pengguna aplikasi.
+*   **Konfigurasi Aplikasi:** Mengelola pengaturan dan parameter aplikasi mobile.
 
 ## Teknologi yang Digunakan
 
-*   **React.js:** Library JavaScript untuk membangun antarmuka pengguna.
-*   **Vite:** Build tool modern yang cepat untuk pengembangan web.
-*   **HTML5 & CSS3:** Struktur dasar dan styling aplikasi.
-*   **JavaScript (ESNext):** Bahasa pemrograman inti.
-*   **ESLint & Prettier:** Untuk menjaga kualitas dan konsistensi kode.
+Proyek ini memanfaatkan tumpukan teknologi modern untuk membangun antarmuka admin yang kuat dan efisien:
 
-*(Catatan: Tambahkan teknologi lain di sini jika proyek Anda menggunakan Redux, Tailwind CSS, Material-UI, dll.)*
+*   **Frontend Framework:** React 19.x
+*   **Build Tool:** Vite 7.x
+*   **Styling:** Tailwind CSS 4.x, Class Variance Authority (cva), clsx, tailwind-merge, tw-animate-css
+*   **UI Components:** Radix UI (Avatar, Checkbox, Dialog, Dropdown Menu, Label, Select, Separator, Slot, Switch, Tabs, Toggle, Toggle Group, Tooltip), Vaul (Drawer components)
+*   **State Management:** Zustand (global state), @tanstack/react-query (server state)
+*   **Form Handling & Validation:** React Hook Form, Zod (schema validation), @hookform/resolvers
+*   **Routing:** React Router DOM 7.x
+*   **HTTP Client:** Axios
+*   **Data Table:** @tanstack/react-table
+*   **Charting & Visualization:** Recharts 2.x
+*   **Drag-and-Drop:** @dnd-kit (core, modifiers, sortable, utilities)
+*   **Icons:** Lucide React, @tabler/icons-react
+*   **Theming:** Next Themes
+*   **Notifications:** Sonner (toast messages)
+*   **Utility Libraries:** browser-image-compression
+*   **Code Quality:** ESLint, Prettier
 
 ## Persyaratan Sistem
 
@@ -45,16 +63,17 @@ Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
     # pnpm install
     ```
 
-3.  **Konfigurasi Variabel Lingkungan (jika ada):**
-    Buat file `.env` di root proyek dan tambahkan variabel lingkungan yang diperlukan (misalnya, `VITE_API_BASE_URL`).
+3.  **Konfigurasi Variabel Lingkungan:**
+    Buat file `.env` di root proyek. Tambahkan variabel lingkungan yang diperlukan untuk koneksi ke API backend. Contoh:
     ```ini
     VITE_API_BASE_URL=http://localhost:8000/api
+    # Tambahkan variabel lain yang dibutuhkan, seperti kunci API, dll.
     ```
-    *(Sesuaikan dengan API backend Anda)*
+    *(Sesuaikan dengan detail API backend Anda)*
 
 ## Menjalankan Aplikasi
 
-Setelah semua dependensi terinstal, Anda dapat menjalankan aplikasi dalam mode pengembangan:
+Setelah semua dependensi terinstal dan variabel lingkungan dikonfigurasi, Anda dapat menjalankan aplikasi dalam mode pengembangan:
 
 ```bash
 npm run dev
@@ -64,7 +83,7 @@ npm run dev
 # pnpm dev
 ```
 
-Aplikasi akan berjalan di `http://localhost:5173` (atau port lain yang tersedia). Buka browser Anda dan navigasikan ke alamat tersebut untuk melihat aplikasi.
+Aplikasi akan berjalan di `http://localhost:5173` (atau port lain yang tersedia). Buka browser Anda dan navigasikan ke alamat tersebut untuk mengakses dashboard admin.
 
 ## Membangun untuk Produksi
 
@@ -97,4 +116,4 @@ Proyek ini dilisensikan di bawah [Nama Lisensi Anda, misal MIT License]. Lihat f
 
 ---
 
-Terima kasih telah menggunakan Bunda Care Web Frontend!
+Terima kasih telah menggunakan Bunda Care Admin Dashboard!
