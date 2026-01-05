@@ -4,12 +4,36 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import imageCompression from "browser-image-compression"
 import { toast } from "sonner"
+import { getCloudinaryFolder, isValidUploadType, CLOUDINARY_CONFIG } from "@/constants/cloudinary"
 
-export function ImageUpload({ value, onChange, disabled }) {
+/**
+ * ImageUpload component with dynamic folder selection
+ * @param {Object} props - Component props
+ * @param {string} props.value - Current image URL
+ * @param {Function} props.onChange - Callback when image changes
+ * @param {boolean} props.disabled - Whether the upload is disabled
+ * @param {('avatar'|'menu')} props.uploadType - Type of upload (affects folder selection)
+ * @param {string} props.label - Custom label for the upload field
+ */
+export function ImageUpload({ 
+    value, 
+    onChange, 
+    disabled, 
+    uploadType = 'menu',
+    label = uploadType === 'avatar' ? 'Avatar' : 'Image'
+}) {
+    // Validate upload type
+    if (!isValidUploadType(uploadType)) {
+        throw new Error(`Invalid uploadType: ${uploadType}. Must be 'avatar' or 'menu'`)
+    }
+
     const [imageUrl, setImageUrl] = useState(value || "")
     const [isUploading, setIsUploading] = useState(false)
     const widgetRef = useRef(null)
     const fileInputRef = useRef(null)
+    
+    // Get the appropriate folder for this upload type
+    const uploadFolder = getCloudinaryFolder(uploadType)
 
     useEffect(() => {
         setImageUrl(value || "")
@@ -20,19 +44,23 @@ export function ImageUpload({ value, onChange, disabled }) {
         if (window.cloudinary) {
             widgetRef.current = window.cloudinary.createUploadWidget(
                 {
-                    cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "demo",
-                    uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default",
+                    cloudName: CLOUDINARY_CONFIG.CLOUD_NAME,
+                    uploadPreset: CLOUDINARY_CONFIG.UPLOAD_PRESET,
                     sources: ["local", "url", "camera"],
                     multiple: false,
                     maxFiles: 1,
                     clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
                     maxFileSize: 5000000, // 5MB
                     cropping: true,
-                    croppingAspectRatio: 1,
-                    folder: "bunda_care/menus",
+                    croppingAspectRatio: uploadType === 'avatar' ? 1 : 1.5, // Square for avatar, slight rectangle for menu
+                    folder: uploadFolder,
                     // Cloudinary transformation for optimization
                     transformation: [
-                        { width: 800, height: 800, crop: "limit" },
+                        { 
+                            width: uploadType === 'avatar' ? 400 : 800, 
+                            height: uploadType === 'avatar' ? 400 : 800, 
+                            crop: "limit" 
+                        },
                         { quality: "auto:good" },
                         { fetch_format: "auto" }
                     ],
@@ -82,12 +110,12 @@ export function ImageUpload({ value, onChange, disabled }) {
     const uploadToCloudinary = async (file) => {
         const formData = new FormData()
         formData.append("file", file)
-        formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default")
-        formData.append("folder", "bunda_care/menus")
+        formData.append("upload_preset", CLOUDINARY_CONFIG.UPLOAD_PRESET)
+        formData.append("folder", uploadFolder)
 
         try {
             const response = await fetch(
-                `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "demo"}/image/upload`,
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.CLOUD_NAME}/image/upload`,
                 {
                     method: "POST",
                     body: formData,
@@ -121,6 +149,9 @@ export function ImageUpload({ value, onChange, disabled }) {
             toast.error("File too large. Maximum size is 10MB")
             return
         }
+
+        // Log upload info for debugging
+        console.log(`Uploading ${uploadType} to folder: ${uploadFolder}`)
 
         setIsUploading(true)
         try {
@@ -161,13 +192,13 @@ export function ImageUpload({ value, onChange, disabled }) {
 
     return (
         <div className="grid gap-2">
-            <Label>Menu Image</Label>
+            <Label>{label}</Label>
             <div className="flex items-start gap-4">
                 {imageUrl ? (
                     <div className="relative group">
                         <img
                             src={imageUrl}
-                            alt="Menu preview"
+                            alt={`${label} preview`}
                             className="w-32 h-32 object-cover rounded-lg border"
                         />
                         <Button

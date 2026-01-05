@@ -205,6 +205,8 @@ export function MenuForm({ menu, open, onOpenChange }) {
                                         value={field.value}
                                         onChange={field.onChange}
                                         disabled={isPending}
+                                        uploadType="menu"
+                                        label="Menu Image"
                                     />
                                 )}
                             />
