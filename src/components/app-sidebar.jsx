@@ -54,6 +54,11 @@ const data = {
       url: "/admin/ingredients",
       icon: IconDatabase,
     },
+    {
+      title: "Articles",
+      url: "/admin/articles",
+      icon: IconFileDescription,
+    },
   ],
   navSecondary: [
     {

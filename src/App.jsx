@@ -13,6 +13,10 @@ import DashboardPage from "@/pages/admin/DashboardPage"
 import UsersPage from "@/pages/admin/UsersPage"
 import MenusPage from "@/pages/admin/MenusPage"
 import IngredientsPage from "@/pages/admin/IngredientsPage"
+import ArticlesPage from "@/pages/admin/ArticlesPage"
+import CreateArticlePage from "@/pages/admin/CreateArticlePage"
+import EditArticlePage from "@/pages/admin/EditArticlePage"
+import ArticlePreviewPage from "@/pages/admin/ArticlePreviewPage"
 
 function App() {
   return (
@@ -39,6 +43,13 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="menus" element={<MenusPage />} />
               <Route path="ingredients" element={<IngredientsPage />} />
+
+              {/* Article Routes */}
+              <Route path="articles" element={<ArticlesPage />} />
+              <Route path="articles/create" element={<CreateArticlePage />} />
+              <Route path="articles/:id/edit" element={<EditArticlePage />} />
+              <Route path="articles/:id/preview" element={<ArticlePreviewPage />} />
+              <Route path="articles/:id" element={<Navigate to="preview" replace />} />
             </Route>
           </Routes>
 
