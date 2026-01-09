@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useCallback, memo } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import RichTextEditor from "@/components/editor/RichTextEditor"
+import { ImageUpload } from "@/components/admin/ImageUpload"
 import { useArticles } from "@/hooks/useArticles"
 import { toast } from "sonner"
 import { Loader2, Save, Eye } from "lucide-react"
 
-export default function ArticleForm({ article = null, isEdit = false }) {
+function ArticleFormInner({ article = null, isEdit = false }) {
     const navigate = useNavigate()
     const { createArticle, updateArticle, isCreating, isUpdating } = useArticles()
     const isLoading = isCreating || isUpdating
@@ -26,19 +27,36 @@ export default function ArticleForm({ article = null, isEdit = false }) {
     const [errors, setErrors] = useState({})
 
     // Handle input changes
-    const handleChange = (field, value) => {
+    const handleChange = useCallback((field, value) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
-        // Clear error for this field
-        if (errors[field]) {
-            setErrors((prev) => ({
-                ...prev,
-                [field]: "",
-            }))
-        }
-    }
+        setErrors((prev) => {
+            if (prev[field]) {
+                return { ...prev, [field]: "" }
+            }
+            return prev
+        })
+    }, [])
+
+    // Specific handlers to prevent inline function creation
+    const handleTitleChange = useCallback((e) => handleChange("title", e.target.value), [handleChange])
+    const handleExcerptChange = useCallback((e) => handleChange("excerpt", e.target.value), [handleChange])
+    const handleCoverImageChange = useCallback((url) => handleChange("cover_image", url), [handleChange])
+    const handleStatusChange = useCallback((value) => handleChange("status", value), [handleChange])
+    const handleContentChange = useCallback((html) => {
+        setFormData((prev) => ({
+            ...prev,
+            content: html,
+        }))
+        setErrors((prev) => {
+            if (prev.content) {
+                return { ...prev, content: "" }
+            }
+            return prev
+        })
+    }, [])
 
     // Validate form
     const validate = () => {
@@ -146,7 +164,7 @@ export default function ArticleForm({ article = null, isEdit = false }) {
                             id="title"
                             placeholder="Enter article title"
                             value={formData.title}
-                            onChange={(e) => handleChange("title", e.target.value)}
+                            onChange={handleTitleChange}
                             className={errors.title ? "border-destructive" : ""}
                         />
                         {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
@@ -159,7 +177,7 @@ export default function ArticleForm({ article = null, isEdit = false }) {
                             id="excerpt"
                             placeholder="Brief description of your article (optional)"
                             value={formData.excerpt}
-                            onChange={(e) => handleChange("excerpt", e.target.value)}
+                            onChange={handleExcerptChange}
                             rows={3}
                             className="resize-none"
                         />
@@ -169,33 +187,17 @@ export default function ArticleForm({ article = null, isEdit = false }) {
                     </div>
 
                     {/* Cover Image */}
-                    <div className="space-y-2">
-                        <Label htmlFor="cover_image">Cover Image URL</Label>
-                        <Input
-                            id="cover_image"
-                            type="url"
-                            placeholder="https://example.com/image.jpg"
-                            value={formData.cover_image}
-                            onChange={(e) => handleChange("cover_image", e.target.value)}
-                        />
-                        {formData.cover_image && (
-                            <div className="mt-2 rounded-lg border overflow-hidden">
-                                <img
-                                    src={formData.cover_image}
-                                    alt="Cover preview"
-                                    className="w-full h-48 object-cover"
-                                    onError={(e) => {
-                                        e.target.style.display = "none"
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <ImageUpload
+                        value={formData.cover_image}
+                        onChange={handleCoverImageChange}
+                        uploadType="article"
+                        label="Cover Image"
+                    />
 
                     {/* Status */}
                     <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
-                        <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+                        <Select value={formData.status} onValueChange={handleStatusChange}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
@@ -221,8 +223,9 @@ export default function ArticleForm({ article = null, isEdit = false }) {
                 </CardHeader>
                 <CardContent>
                     <RichTextEditor
+                        key={article?.id || "new-article"}
                         content={formData.content}
-                        onChange={(html) => handleChange("content", html)}
+                        onChange={handleContentChange}
                         placeholder="Start writing your article content here..."
                     />
                     {errors.content && <p className="text-sm text-destructive mt-2">{errors.content}</p>}
@@ -231,3 +234,5 @@ export default function ArticleForm({ article = null, isEdit = false }) {
         </form>
     )
 }
+
+export default memo(ArticleFormInner)

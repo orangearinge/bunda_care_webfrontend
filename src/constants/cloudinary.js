@@ -5,7 +5,7 @@
  */
 
 /**
- * @typedef {'avatar' | 'menu'} UploadType
+ * @typedef {'avatar' | 'menu' | 'article'} UploadType
  * Type definition for supported upload types
  * @typedef {Object} CloudinaryConfig
  * @property {string} CLOUD_NAME - Cloudinary cloud name
@@ -13,6 +13,7 @@
  * @property {Object} FOLDERS - Folder configuration
  * @property {string} FOLDERS.AVATAR - Folder for user avatars
  * @property {string} FOLDERS.MENU - Folder for menu images
+ * @property {string} FOLDERS.ARTICLE - Folder for article images
  */
 
 /**
@@ -22,9 +23,12 @@
 export const CLOUDINARY_FOLDERS = {
   /** Folder for user profile avatars */
   AVATAR: import.meta.env.VITE_CLOUDINARY_AVATAR_FOLDER || 'bunda_care/avatars',
-  
+
   /** Folder for food menu images */
-  MENU: import.meta.env.VITE_CLOUDINARY_MENU_FOLDER || 'bunda_care/menus'
+  MENU: import.meta.env.VITE_CLOUDINARY_MENU_FOLDER || 'bunda_care/menus',
+
+  /** Folder for article images */
+  ARTICLE: import.meta.env.VITE_CLOUDINARY_ARTICLE_FOLDER || 'bunda_care/articles'
 };
 
 /**
@@ -34,10 +38,10 @@ export const CLOUDINARY_FOLDERS = {
 export const CLOUDINARY_CONFIG = {
   /** Cloudinary cloud name from environment */
   CLOUD_NAME: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo',
-  
+
   /** Upload preset for unsigned uploads */
   UPLOAD_PRESET: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'ml_default',
-  
+
   /** Folder configuration */
   FOLDERS: CLOUDINARY_FOLDERS
 };
@@ -57,8 +61,10 @@ export const getCloudinaryFolder = (uploadType) => {
       return CLOUDINARY_FOLDERS.AVATAR;
     case 'menu':
       return CLOUDINARY_FOLDERS.MENU;
+    case 'article':
+      return CLOUDINARY_FOLDERS.ARTICLE;
     default:
-      throw new Error(`Unsupported upload type: ${uploadType}. Supported types: avatar, menu`);
+      throw new Error(`Unsupported upload type: ${uploadType}. Supported types: avatar, menu, article`);
   }
 };
 
@@ -72,7 +78,7 @@ export const getCloudinaryFolder = (uploadType) => {
  * isValidUploadType('invalid') // false
  */
 export const isValidUploadType = (uploadType) => {
-  return ['avatar', 'menu'].includes(uploadType);
+  return ['avatar', 'menu', 'article'].includes(uploadType);
 };
 
 /**
@@ -82,10 +88,10 @@ export const isValidUploadType = (uploadType) => {
 export const validateCloudinaryConfig = () => {
   const required = ['VITE_CLOUDINARY_CLOUD_NAME', 'VITE_CLOUDINARY_UPLOAD_PRESET'];
   const optional = ['VITE_CLOUDINARY_AVATAR_FOLDER', 'VITE_CLOUDINARY_MENU_FOLDER'];
-  
+
   const missing = required.filter(key => !import.meta.env[key]);
   const missingOptional = optional.filter(key => !import.meta.env[key]);
-  
+
   return {
     isValid: missing.length === 0,
     missing,

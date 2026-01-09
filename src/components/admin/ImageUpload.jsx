@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { IconUpload, IconX, IconPhoto, IconLoader2 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -15,10 +15,10 @@ import { getCloudinaryFolder, isValidUploadType, CLOUDINARY_CONFIG } from "@/con
  * @param {('avatar'|'menu')} props.uploadType - Type of upload (affects folder selection)
  * @param {string} props.label - Custom label for the upload field
  */
-export function ImageUpload({ 
-    value, 
-    onChange, 
-    disabled, 
+export function ImageUpload({
+    value,
+    onChange,
+    disabled,
     uploadType = 'menu',
     label = uploadType === 'avatar' ? 'Avatar' : 'Image'
 }) {
@@ -31,7 +31,7 @@ export function ImageUpload({
     const [isUploading, setIsUploading] = useState(false)
     const widgetRef = useRef(null)
     const fileInputRef = useRef(null)
-    
+
     // Get the appropriate folder for this upload type
     const uploadFolder = getCloudinaryFolder(uploadType)
 
@@ -41,7 +41,8 @@ export function ImageUpload({
 
     useEffect(() => {
         // Initialize Cloudinary Upload Widget with compression settings
-        if (window.cloudinary) {
+        // Only run once on mount, not when onChange changes
+        if (window.cloudinary && !widgetRef.current) {
             widgetRef.current = window.cloudinary.createUploadWidget(
                 {
                     cloudName: CLOUDINARY_CONFIG.CLOUD_NAME,
@@ -52,14 +53,13 @@ export function ImageUpload({
                     clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
                     maxFileSize: 5000000, // 5MB
                     cropping: true,
-                    croppingAspectRatio: uploadType === 'avatar' ? 1 : 1.5, // Square for avatar, slight rectangle for menu
+                    croppingAspectRatio: uploadType === 'avatar' ? 1 : (uploadType === 'article' ? 1.91 : 1.5),
                     folder: uploadFolder,
-                    // Cloudinary transformation for optimization
                     transformation: [
-                        { 
-                            width: uploadType === 'avatar' ? 400 : 800, 
-                            height: uploadType === 'avatar' ? 400 : 800, 
-                            crop: "limit" 
+                        {
+                            width: uploadType === 'avatar' ? 400 : (uploadType === 'article' ? 1200 : 800),
+                            height: uploadType === 'avatar' ? 400 : (uploadType === 'article' ? 630 : 800),
+                            crop: "limit"
                         },
                         { quality: "auto:good" },
                         { fetch_format: "auto" }
@@ -78,7 +78,7 @@ export function ImageUpload({
                 }
             )
         }
-    }, [onChange])
+    }, []) // Empty dependency - only run once on mount
 
     const compressImage = async (file) => {
         const options = {
