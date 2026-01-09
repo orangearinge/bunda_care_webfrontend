@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/drawer"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
     Select,
     SelectContent,
@@ -46,6 +47,9 @@ export function MenuForm({ menu, open, onOpenChange }) {
             tags: "",
             image_url: "",
             is_active: true,
+            description: "",
+            cooking_instructions: "",
+            cooking_time_minutes: null,
             ingredients: [],
         },
     })
@@ -71,6 +75,9 @@ export function MenuForm({ menu, open, onOpenChange }) {
                 tags: "",
                 image_url: "",
                 is_active: true,
+                description: "",
+                cooking_instructions: "",
+                cooking_time_minutes: null,
                 ingredients: [],
             })
         }
@@ -193,6 +200,49 @@ export function MenuForm({ menu, open, onOpenChange }) {
                             />
                             {errors.tags && (
                                 <p className="text-sm text-destructive">{errors.tags.message}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                {...register("description")}
+                                placeholder="Describe the menu, its nutritional benefits, or special features..."
+                                disabled={isPending}
+                                rows={3}
+                            />
+                            {errors.description && (
+                                <p className="text-sm text-destructive">{errors.description.message}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="cooking_time_minutes">Cooking Time (minutes)</Label>
+                            <Input
+                                id="cooking_time_minutes"
+                                type="number"
+                                {...register("cooking_time_minutes", { valueAsNumber: true })}
+                                placeholder="e.g., 30"
+                                disabled={isPending}
+                                min="0"
+                            />
+                            {errors.cooking_time_minutes && (
+                                <p className="text-sm text-destructive">{errors.cooking_time_minutes.message}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="cooking_instructions">Cooking Instructions</Label>
+                            <Textarea
+                                id="cooking_instructions"
+                                {...register("cooking_instructions")}
+                                placeholder="Step-by-step cooking instructions..."
+                                disabled={isPending}
+                                rows={4}
+                            />
+                            {errors.cooking_instructions && (
+                                <p className="text-sm text-destructive">{errors.cooking_instructions.message}</p>
                             )}
                         </div>
 

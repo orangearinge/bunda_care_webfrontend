@@ -12,6 +12,9 @@ export const menuSchema = z.object({
     tags: z.string().optional(),
     image_url: z.string().optional().nullable(),
     is_active: z.boolean().default(true),
+    description: z.string().optional(),
+    cooking_instructions: z.string().optional(),
+    cooking_time_minutes: z.number().min(0, "Cooking time must be positive").optional(),
     ingredients: z
         .array(
             z.object({
