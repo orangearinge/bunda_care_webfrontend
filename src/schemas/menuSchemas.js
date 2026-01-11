@@ -14,7 +14,12 @@ export const menuSchema = z.object({
     is_active: z.boolean().default(true),
     description: z.string().optional(),
     cooking_instructions: z.string().optional(),
-    cooking_time_minutes: z.number().min(0, "Cooking time must be positive").optional(),
+    cooking_time_minutes: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const parsed = parseInt(val, 10);
+        return isNaN(parsed) ? null : parsed;
+    }, z.number().min(0, "Cooking time must be positive").nullable().optional()),
+    target_role: z.string().optional().default("ALL"),
     ingredients: z
         .array(
             z.object({

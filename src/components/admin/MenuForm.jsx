@@ -28,6 +28,14 @@ import { useCreateMenu, useUpdateMenu } from "@/hooks/useMenus"
 import { menuSchema } from "@/schemas/menuSchemas"
 
 const mealTypes = ["BREAKFAST", "LUNCH", "DINNER"]
+const targetRoles = [
+    { value: "ALL", label: "All Users" },
+    { value: "IBU", label: "Mothers (Ibu)" },
+    { value: "ANAK", label: "Children (General)" },
+    { value: "ANAK_6_8", label: "Infant (6-8 Months)" },
+    { value: "ANAK_9_11", label: "Infant (9-11 Months)" },
+    { value: "ANAK_12_23", label: "Toddler (12-23 Months)" },
+]
 
 export function MenuForm({ menu, open, onOpenChange }) {
     const createMenuMutation = useCreateMenu()
@@ -50,6 +58,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
             description: "",
             cooking_instructions: "",
             cooking_time_minutes: null,
+            target_role: "ALL",
             ingredients: [],
         },
     })
@@ -60,6 +69,11 @@ export function MenuForm({ menu, open, onOpenChange }) {
             // Format menu data for form
             const formattedMenu = {
                 ...menu,
+                description: menu.description || "",
+                cooking_instructions: menu.cooking_instructions || "",
+                cooking_time_minutes: menu.cooking_time_minutes === null ? "" : menu.cooking_time_minutes,
+                target_role: menu.target_role || "ALL",
+                tags: menu.tags || "",
                 ingredients: menu.ingredients?.map(ing => ({
                     ingredient_id: ing.ingredient_id || ing.id,
                     quantity_g: ing.quantity_g,
@@ -78,6 +92,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                 description: "",
                 cooking_instructions: "",
                 cooking_time_minutes: null,
+                target_role: "ALL",
                 ingredients: [],
             })
         }
@@ -105,7 +120,8 @@ export function MenuForm({ menu, open, onOpenChange }) {
 
         const formattedData = {
             ...data,
-            ingredients: formattedIngredients
+            ingredients: formattedIngredients,
+            cooking_time_minutes: data.cooking_time_minutes === "" || data.cooking_time_minutes === undefined ? null : Number(data.cooking_time_minutes),
         }
 
         console.log('Submitting menu data:', formattedData) // Debug log
@@ -191,6 +207,37 @@ export function MenuForm({ menu, open, onOpenChange }) {
                         </div>
 
                         <div className="grid gap-2">
+                            <Label htmlFor="target_role">
+                                Target Role <span className="text-destructive">*</span>
+                            </Label>
+                            <Controller
+                                name="target_role"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        disabled={isPending}
+                                    >
+                                        <SelectTrigger id="target_role">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {targetRoles.map((role) => (
+                                                <SelectItem key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.target_role && (
+                                <p className="text-sm text-destructive">{errors.target_role.message}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
                             <Label htmlFor="tags">Tags</Label>
                             <Input
                                 id="tags"
@@ -222,7 +269,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                             <Input
                                 id="cooking_time_minutes"
                                 type="number"
-                                {...register("cooking_time_minutes", { valueAsNumber: true })}
+                                {...register("cooking_time_minutes")}
                                 placeholder="e.g., 30"
                                 disabled={isPending}
                                 min="0"

@@ -50,6 +50,7 @@ export default function MenusPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [mealTypeFilter, setMealTypeFilter] = useState("ALL")
     const [statusFilter, setStatusFilter] = useState("ALL")
+    const [targetRoleFilter, setTargetRoleFilter] = useState("ALL")
     const [editingMenu, setEditingMenu] = useState(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [page, setPage] = useState(1)
@@ -65,6 +66,7 @@ export default function MenusPage() {
         ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
         ...(mealTypeFilter !== "ALL" && { meal_type: mealTypeFilter }),
         ...(statusFilter !== "ALL" && { is_active: statusFilter === "ACTIVE" }),
+        ...(targetRoleFilter !== "ALL" && { target_role: targetRoleFilter }),
     }
 
     // Fetch menus with React Query
@@ -113,6 +115,17 @@ export default function MenusPage() {
             cell: ({ row }) => {
                 const type = row.getValue("meal_type")
                 return <Badge variant="outline">{type}</Badge>
+            },
+        },
+        {
+            accessorKey: "target_role",
+            header: "Target",
+            cell: ({ row }) => {
+                const role = row.getValue("target_role") || "ALL"
+                let variant = "secondary"
+                if (role === "IBU") variant = "default"
+                if (role.startsWith("ANAK")) variant = "outline"
+                return <Badge variant={variant}>{role}</Badge>
             },
         },
         {
@@ -273,6 +286,24 @@ export default function MenusPage() {
                                 <SelectItem value="ALL">All Status</SelectItem>
                                 <SelectItem value="ACTIVE">Active</SelectItem>
                                 <SelectItem value="INACTIVE">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="role-filter" className="text-sm font-medium">
+                            Target:
+                        </Label>
+                        <Select value={targetRoleFilter} onValueChange={setTargetRoleFilter}>
+                            <SelectTrigger id="role-filter" className="w-[140px]" size="sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Roles</SelectItem>
+                                <SelectItem value="IBU">IBU</SelectItem>
+                                <SelectItem value="ANAK">ANAK (All)</SelectItem>
+                                <SelectItem value="ANAK_6_8">ANAK 6-8M</SelectItem>
+                                <SelectItem value="ANAK_9_11">ANAK 9-11M</SelectItem>
+                                <SelectItem value="ANAK_12_23">ANAK 12-23M</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
