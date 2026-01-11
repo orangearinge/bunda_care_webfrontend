@@ -40,7 +40,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                 {statsLoading ? (
                     <>
-                        {[...Array(4)].map((_, i) => (
+                        {[...Array(5)].map((_, i) => (
                             <Skeleton key={i} className="h-[140px] rounded-lg" />
                         ))}
                     </>
@@ -73,6 +73,14 @@ export default function DashboardPage() {
                             trend="up"
                             description="Ingredient database growth"
                             footer="Available ingredients"
+                        />
+                        <StatsCard
+                            title="Total Articles"
+                            value={stats?.total_articles?.toLocaleString() || "0"}
+                            change={stats?.articles_change || 0}
+                            trend="up"
+                            description="Article database growth"
+                            footer="Total articles"
                         />
                         <StatsCard
                             title="Active Users Today"
