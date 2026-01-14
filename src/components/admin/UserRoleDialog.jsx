@@ -17,11 +17,12 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useUpdateUserRole } from "@/hooks/useUsers"
+import { ROLES_LIST, USER_ROLES } from "@/constants/roles"
 
-const roles = ["ADMIN", "IBU_HAMIL", "IBU_MENYUSUI", "ANAK_BALITA"]
+
 
 export function UserRoleDialog({ user, open, onOpenChange }) {
-    const [selectedRole, setSelectedRole] = useState(user?.role || "IBU_HAMIL")
+    const [selectedRole, setSelectedRole] = useState(user?.role || USER_ROLES.IBU_HAMIL)
     const updateRoleMutation = useUpdateUserRole()
 
     // Update selected role when user changes
@@ -63,7 +64,7 @@ export function UserRoleDialog({ user, open, onOpenChange }) {
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
                             <SelectContent>
-                                {roles.map((role) => (
+                                {ROLES_LIST.map((role) => (
                                     <SelectItem key={role} value={role}>
                                         {role}
                                     </SelectItem>

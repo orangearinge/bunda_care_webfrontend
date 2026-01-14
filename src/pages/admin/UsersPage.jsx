@@ -36,6 +36,7 @@ import { EmptyState } from "@/components/admin/EmptyState"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useUsers } from "@/hooks/useUsers"
 import { useDebounce } from "@/hooks/useDebounce"
+import { USER_ROLES, ROLES_LIST } from "@/constants/roles"
 
 export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -87,7 +88,7 @@ export default function UsersPage() {
             cell: ({ row }) => {
                 const role = row.getValue("role")
                 return (
-                    <Badge variant={role === "ADMIN" ? "default" : "outline"}>
+                    <Badge variant={role === USER_ROLES.ADMIN ? "default" : "outline"}>
                         {role}
                     </Badge>
                 )
@@ -182,10 +183,11 @@ export default function UsersPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Roles</SelectItem>
-                            <SelectItem value="ADMIN">ADMIN</SelectItem>
-                            <SelectItem value="IBU_HAMIL">IBU_HAMIL</SelectItem>
-                            <SelectItem value="IBU_MENYUSUI">IBU_MENYUSUI</SelectItem>
-                            <SelectItem value="ANAK_BALITA">ANAK_BALITA</SelectItem>
+                            {ROLES_LIST.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                    {role}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

@@ -45,6 +45,7 @@ import { EmptyState } from "@/components/admin/EmptyState"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useMenus, useDeleteMenu } from "@/hooks/useMenus"
 import { useDebounce } from "@/hooks/useDebounce"
+import { MENU_TARGET_ROLES, MENU_TARGET_ROLES_LIST, MEAL_TYPES, MEAL_TYPES_LIST } from "@/constants/roles"
 
 export default function MenusPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -123,7 +124,7 @@ export default function MenusPage() {
             cell: ({ row }) => {
                 const role = row.getValue("target_role") || "ALL"
                 let variant = "secondary"
-                if (role === "IBU") variant = "default"
+                if (role === MENU_TARGET_ROLES.IBU) variant = "default"
                 if (role.startsWith("ANAK")) variant = "outline"
                 return <Badge variant={variant}>{role}</Badge>
             },
@@ -268,9 +269,11 @@ export default function MenusPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">All Types</SelectItem>
-                                <SelectItem value="BREAKFAST">BREAKFAST</SelectItem>
-                                <SelectItem value="LUNCH">LUNCH</SelectItem>
-                                <SelectItem value="DINNER">DINNER</SelectItem>
+                                {MEAL_TYPES_LIST.map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                        {type}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -299,11 +302,11 @@ export default function MenusPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">All Roles</SelectItem>
-                                <SelectItem value="IBU">IBU</SelectItem>
-                                <SelectItem value="ANAK">ANAK (All)</SelectItem>
-                                <SelectItem value="ANAK_6_8">ANAK 6-8M</SelectItem>
-                                <SelectItem value="ANAK_9_11">ANAK 9-11M</SelectItem>
-                                <SelectItem value="ANAK_12_23">ANAK 12-23M</SelectItem>
+                                {MENU_TARGET_ROLES_LIST.map((role) => (
+                                    <SelectItem key={role} value={role}>
+                                        {role === 'IBU' ? 'IBU' : role.replace('ANAK_', 'ANAK ')}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

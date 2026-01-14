@@ -26,15 +26,24 @@ import { IngredientPicker } from "@/components/admin/IngredientPicker"
 import { ImageUpload } from "@/components/admin/ImageUpload"
 import { useCreateMenu, useUpdateMenu } from "@/hooks/useMenus"
 import { menuSchema } from "@/schemas/menuSchemas"
+import { MEAL_TYPES, MEAL_TYPES_LIST, MENU_TARGET_ROLES } from "@/constants/roles"
 
-const mealTypes = ["BREAKFAST", "LUNCH", "DINNER"]
-const targetRoles = [
-    { value: "ALL", label: "All Users" },
-    { value: "IBU", label: "Mothers (Ibu)" },
-    { value: "ANAK", label: "Children (General)" },
-    { value: "ANAK_6_8", label: "Infant (6-8 Months)" },
-    { value: "ANAK_9_11", label: "Infant (9-11 Months)" },
-    { value: "ANAK_12_23", label: "Toddler (12-23 Months)" },
+const targetRolesLabels = {
+    ALL: "All Users",
+    [MENU_TARGET_ROLES.IBU]: "Mothers (Ibu)",
+    ANAK: "Children (General)",
+    [MENU_TARGET_ROLES.ANAK_6_8]: "Infant (6-8 Months)",
+    [MENU_TARGET_ROLES.ANAK_9_11]: "Infant (9-11 Months)",
+    [MENU_TARGET_ROLES.ANAK_12_23]: "Toddler (12-23 Months)",
+}
+
+const targetRolesOptions = [
+    { value: "ALL", label: targetRolesLabels.ALL },
+    { value: MENU_TARGET_ROLES.IBU, label: targetRolesLabels[MENU_TARGET_ROLES.IBU] },
+    { value: "ANAK", label: targetRolesLabels.ANAK },
+    { value: MENU_TARGET_ROLES.ANAK_6_8, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_6_8] },
+    { value: MENU_TARGET_ROLES.ANAK_9_11, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_9_11] },
+    { value: MENU_TARGET_ROLES.ANAK_12_23, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_12_23] },
 ]
 
 export function MenuForm({ menu, open, onOpenChange }) {
@@ -51,7 +60,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
         resolver: zodResolver(menuSchema),
         defaultValues: {
             name: "",
-            meal_type: "BREAKFAST",
+            meal_type: MEAL_TYPES.BREAKFAST,
             tags: "",
             image_url: "",
             is_active: true,
@@ -85,7 +94,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
         } else {
             reset({
                 name: "",
-                meal_type: "BREAKFAST",
+                meal_type: MEAL_TYPES.BREAKFAST,
                 tags: "",
                 image_url: "",
                 is_active: true,
@@ -192,7 +201,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {mealTypes.map((type) => (
+                                            {MEAL_TYPES_LIST.map((type) => (
                                                 <SelectItem key={type} value={type}>
                                                     {type}
                                                 </SelectItem>
@@ -223,7 +232,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {targetRoles.map((role) => (
+                                            {targetRolesOptions.map((role) => (
                                                 <SelectItem key={role.value} value={role.value}>
                                                     {role.label}
                                                 </SelectItem>
