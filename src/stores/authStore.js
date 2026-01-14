@@ -12,17 +12,10 @@ const useAuthStore = create(
 
             // Actions
             setAuth: (user, token) => {
-                // Store token in localStorage for axios interceptor
-                if (token) {
-                    localStorage.setItem("authToken", token)
-                }
                 set({ user, token, isAuthenticated: true })
             },
 
             clearAuth: () => {
-                // Clear token from localStorage
-                localStorage.removeItem("authToken")
-                localStorage.removeItem("admin_user") // Clear old format too
                 set({ user: null, token: null, isAuthenticated: false })
             },
 

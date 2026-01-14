@@ -14,9 +14,6 @@ export const useLogin = () => {
             const { token, user } = data
             setAuth(user, token)
 
-            // Also store in old format for compatibility
-            localStorage.setItem("admin_user", JSON.stringify(user))
-
             toast.success("Login successful!")
         },
         onError: (error) => {
