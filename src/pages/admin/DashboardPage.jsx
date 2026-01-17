@@ -1,6 +1,6 @@
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Area, AreaChart, CartesianGrid, XAxis, Pie, PieChart, Label as RechartsLabel } from "recharts"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { StatsCard } from "@/components/admin/StatsCard"
 import { useDashboardStats, useUserGrowth } from "@/hooks/useDashboard"
@@ -14,10 +14,25 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 
-const chartConfig = {
+const userGrowthConfig = {
     count: {
         label: "Users",
         color: "var(--primary)",
+    },
+}
+
+const sentimentConfig = {
+    positif: {
+        label: "Positif",
+        color: "var(--primary)",
+    },
+    negatif: {
+        label: "Negatif",
+        color: "var(--destructive)",
+    },
+    lainnya: {
+        label: "Lainnya",
+        color: "var(--muted-foreground)",
     },
 }
 
@@ -25,6 +40,20 @@ export default function DashboardPage() {
     const [days, setDays] = React.useState(30)
     const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
     const { data: userGrowthData, isLoading: growthLoading, isError: growthError } = useUserGrowth(days)
+
+    const sentimentData = React.useMemo(() => {
+        if (!stats?.sentiment_distribution) return []
+        return stats.sentiment_distribution.map(item => ({
+            ...item,
+            fill: item.name === "Positif" ? sentimentConfig.positif.color :
+                item.name === "Negatif" ? sentimentConfig.negatif.color :
+                    sentimentConfig.lainnya.color
+        }))
+    }, [stats])
+
+    const totalFeedback = React.useMemo(() => {
+        return sentimentData.reduce((acc, curr) => acc + curr.value, 0)
+    }, [sentimentData])
 
     return (
         <div className="flex flex-col gap-6">
@@ -94,90 +123,163 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            {/* User Growth Chart */}
-            <Card className="@container/card">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>User Growth</CardTitle>
-                            <CardDescription>
-                                Total registered users over time
-                            </CardDescription>
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* User Growth Chart - Takes up 2 columns on large screens */}
+                <Card className="md:col-span-2 shadow-sm">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>User Growth</CardTitle>
+                                <CardDescription>
+                                    Total registered users over time
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="days-filter" className="text-sm font-medium">
+                                    Range:
+                                </Label>
+                                <Select value={days.toString()} onValueChange={(val) => setDays(Number(val))}>
+                                    <SelectTrigger id="days-filter" className="w-[140px]" size="sm">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="7">Last 7 days</SelectItem>
+                                        <SelectItem value="30">Last 30 days</SelectItem>
+                                        <SelectItem value="90">Last 90 days</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="days-filter" className="text-sm font-medium">
-                                Range:
-                            </Label>
-                            <Select value={days.toString()} onValueChange={(val) => setDays(Number(val))}>
-                                <SelectTrigger id="days-filter" className="w-[140px]" size="sm">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="7">Last 7 days</SelectItem>
-                                    <SelectItem value="30">Last 30 days</SelectItem>
-                                    <SelectItem value="90">Last 90 days</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                    {growthLoading ? (
-                        <Skeleton className="h-[300px] w-full" />
-                    ) : growthError ? (
-                        <div className="h-[300px] flex items-center justify-center text-destructive">
-                            Failed to load user growth data
-                        </div>
-                    ) : (
-                        <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
-                            <AreaChart data={userGrowthData}>
-                                <defs>
-                                    <linearGradient id="fillCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-count)" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="var(--color-count)" stopOpacity={0.1} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid vertical={false} />
-                                <XAxis
-                                    dataKey="date"
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickMargin={8}
-                                    minTickGap={32}
-                                    tickFormatter={(value) => {
-                                        const date = new Date(value)
-                                        return date.toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                        })
-                                    }}
-                                />
-                                <ChartTooltip
-                                    cursor={false}
-                                    content={
-                                        <ChartTooltipContent
-                                            labelFormatter={(value) => {
-                                                return new Date(value).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
+                    </CardHeader>
+                    <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+                        {growthLoading ? (
+                            <Skeleton className="h-[300px] w-full" />
+                        ) : growthError ? (
+                            <div className="h-[300px] flex items-center justify-center text-destructive">
+                                Failed to load user growth data
+                            </div>
+                        ) : (
+                            <ChartContainer config={userGrowthConfig} className="aspect-auto h-[300px] w-full">
+                                <AreaChart data={userGrowthData}>
+                                    <defs>
+                                        <linearGradient id="fillCount" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--color-count)" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="var(--color-count)" stopOpacity={0.1} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        minTickGap={32}
+                                        tickFormatter={(value) => {
+                                            const date = new Date(value)
+                                            return date.toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                            })
+                                        }}
+                                    />
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={
+                                            <ChartTooltipContent
+                                                labelFormatter={(value) => {
+                                                    return new Date(value).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                }}
+                                                indicator="dot"
+                                            />
+                                        }
+                                    />
+                                    <Area
+                                        dataKey="count"
+                                        type="natural"
+                                        fill="url(#fillCount)"
+                                        stroke="var(--color-count)"
+                                    />
+                                </AreaChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Sentiment Distribution Chart */}
+                <Card className="flex flex-col shadow-sm">
+                    <CardHeader className="items-center pb-0">
+                        <CardTitle>Sentiment Feedback</CardTitle>
+                        <CardDescription>All time feedback distribution</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 pb-0">
+                        {statsLoading ? (
+                            <div className="flex h-[250px] items-center justify-center">
+                                <Skeleton className="h-[200px] w-[200px] rounded-full" />
+                            </div>
+                        ) : !sentimentData.length ? (
+                            <div className="flex h-[250px] items-center justify-center text-muted-foreground">
+                                No feedback data available
+                            </div>
+                        ) : (
+                            <ChartContainer
+                                config={sentimentConfig}
+                                className="mx-auto aspect-square max-h-[250px]"
+                            >
+                                <PieChart>
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                                    <Pie
+                                        data={sentimentData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        innerRadius={60}
+                                        strokeWidth={5}
+                                    >
+                                        <RechartsLabel
+                                            content={({ viewBox }) => {
+                                                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                    return (
+                                                        <text
+                                                            x={viewBox.cx}
+                                                            y={viewBox.cy}
+                                                            textAnchor="middle"
+                                                            dominantBaseline="middle"
+                                                        >
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={viewBox.cy}
+                                                                className="fill-foreground text-3xl font-bold"
+                                                            >
+                                                                {totalFeedback.toLocaleString()}
+                                                            </tspan>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={(viewBox.cy || 0) + 24}
+                                                                className="fill-muted-foreground text-xs"
+                                                            >
+                                                                Total Feedback
+                                                            </tspan>
+                                                        </text>
+                                                    )
+                                                }
                                             }}
-                                            indicator="dot"
                                         />
-                                    }
-                                />
-                                <Area
-                                    dataKey="count"
-                                    type="natural"
-                                    fill="url(#fillCount)"
-                                    stroke="var(--color-count)"
-                                />
-                            </AreaChart>
-                        </ChartContainer>
-                    )}
-                </CardContent>
-            </Card>
+                                    </Pie>
+                                </PieChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                    <CardFooter className="flex-col gap-2 text-sm">
+                        <div className="flex items-center gap-2 font-medium leading-none">
+                            Sentiment overview <span className="text-muted-foreground">based on AI classification</span>
+                        </div>
+                    </CardFooter>
+                </Card>
+            </div>
         </div>
     )
 }

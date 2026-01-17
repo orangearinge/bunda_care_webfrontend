@@ -11,6 +11,7 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
+  IconMessageReport,
   IconReport,
   IconSearch,
   IconSettings,
@@ -58,6 +59,11 @@ const data = {
       title: "Articles",
       url: "/admin/articles",
       icon: IconFileDescription,
+    },
+    {
+      title: "Feedbacks",
+      url: "/admin/feedbacks",
+      icon: IconMessageReport,
     },
   ],
   navSecondary: [

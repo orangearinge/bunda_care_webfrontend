@@ -14,6 +14,7 @@ import UsersPage from "@/pages/admin/UsersPage"
 import MenusPage from "@/pages/admin/MenusPage"
 import IngredientsPage from "@/pages/admin/IngredientsPage"
 import ArticlesPage from "@/pages/admin/ArticlesPage"
+import FeedbacksPage from "@/pages/admin/FeedbacksPage"
 import CreateArticlePage from "@/pages/admin/CreateArticlePage"
 import EditArticlePage from "@/pages/admin/EditArticlePage"
 import ArticlePreviewPage from "@/pages/admin/ArticlePreviewPage"
@@ -43,6 +44,8 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="menus" element={<MenusPage />} />
               <Route path="ingredients" element={<IngredientsPage />} />
+              <Route path="feedbacks" element={<FeedbacksPage />} />
+
 
               {/* Article Routes */}
               <Route path="articles" element={<ArticlesPage />} />
