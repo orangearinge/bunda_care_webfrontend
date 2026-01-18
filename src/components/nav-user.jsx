@@ -1,9 +1,6 @@
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
-  IconUserCircle,
 } from "@tabler/icons-react"
 import { useNavigate } from "react-router-dom"
 
@@ -15,7 +12,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -86,21 +82,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+
             <DropdownMenuItem
               onClick={handleLogout}
               disabled={isLoggingOut}
