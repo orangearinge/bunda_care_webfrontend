@@ -6,6 +6,7 @@ const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
     headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
     },
     timeout: 10000, // 10 seconds timeout
 })
