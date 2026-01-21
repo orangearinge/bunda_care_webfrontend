@@ -166,10 +166,21 @@ export default function MenusPage() {
         },
         {
             id: "ingredients",
-            header: "Ingredients",
+            header: "Ingredients / Info",
             cell: ({ row }) => {
                 const count = row.original.ingredients?.length || 0
-                return <div className="text-sm text-muted-foreground">{count} items</div>
+                const isManual = row.original.nutrition_is_manual
+
+                return (
+                    <div className="flex flex-col gap-1">
+                        <span className="text-sm text-muted-foreground">{count} items</span>
+                        {isManual && (
+                            <Badge variant="secondary" className="w-fit text-[10px] h-5 px-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200">
+                                Manual Nutrition
+                            </Badge>
+                        )}
+                    </div>
+                )
             },
         },
         {

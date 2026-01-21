@@ -23,11 +23,36 @@ export const menuSchema = z.object({
     ingredients: z
         .array(
             z.object({
-                ingredient_id: z.union([z.number(), z.string()]).optional(),
-                id: z.number().optional(),
-                name: z.string().optional(),
-                quantity_g: z.number().min(0, "Quantity must be positive"),
+                ingredient_id: z.union([z.number(), z.string()]).optional().nullable(),
+                id: z.number().optional().nullable(),
+                name: z.string().optional().nullable(),
+                quantity_g: z.number().min(0, "Quantity must be positive").optional().nullable(),
+                display_text: z.string().optional().nullable(), // e.g., "3 lembar", "Secukupnya"
             })
         )
         .min(1, "At least one ingredient is required"),
+
+    // Manual Nutrition Override (Golden Override)
+    nutrition_is_manual: z.boolean().optional().default(false),
+    serving_unit: z.string().optional().nullable(),
+    manual_calories: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const parsed = parseInt(val, 10);
+        return isNaN(parsed) ? null : parsed;
+    }, z.number().min(0, "Calories must be positive").nullable().optional()),
+    manual_protein_g: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? null : parsed;
+    }, z.number().min(0, "Protein must be positive").nullable().optional()),
+    manual_carbs_g: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? null : parsed;
+    }, z.number().min(0, "Carbs must be positive").nullable().optional()),
+    manual_fat_g: z.preprocess((val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? null : parsed;
+    }, z.number().min(0, "Fat must be positive").nullable().optional()),
 })
