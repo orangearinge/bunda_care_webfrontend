@@ -22,14 +22,6 @@ export default function AdminLayout() {
                     <Separator orientation="vertical" className="mr-2 h-4" />
                     <Breadcrumb>
                         <BreadcrumbList>
-                            <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink asChild>
-                                    <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
-                                        Admin Panel
-                                    </Link>
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
                                 <BreadcrumbPage className="text-foreground font-medium">Dashboard</BreadcrumbPage>
                             </BreadcrumbItem>
