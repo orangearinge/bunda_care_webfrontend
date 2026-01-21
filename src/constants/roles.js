@@ -20,7 +20,6 @@ export const MEAL_TYPES = {
     BREAKFAST: "BREAKFAST",
     LUNCH: "LUNCH",
     DINNER: "DINNER",
-    SNACK: "SNACK",
 };
 
 export const MEAL_TYPES_LIST = Object.values(MEAL_TYPES);
