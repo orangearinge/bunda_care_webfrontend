@@ -19,7 +19,7 @@ export const menuSchema = z.object({
         const parsed = parseInt(val, 10);
         return isNaN(parsed) ? null : parsed;
     }, z.number().min(0, "Cooking time must be positive").nullable().optional()),
-    target_role: z.string().optional().default("ALL"),
+    target_role: z.string().optional().default("IBU"),
     ingredients: z
         .array(
             z.object({

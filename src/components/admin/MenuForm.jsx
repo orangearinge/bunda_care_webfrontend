@@ -29,18 +29,14 @@ import { menuSchema } from "@/schemas/menuSchemas"
 import { MEAL_TYPES, MEAL_TYPES_LIST, MENU_TARGET_ROLES } from "@/constants/roles"
 
 const targetRolesLabels = {
-    ALL: "All Users",
     [MENU_TARGET_ROLES.IBU]: "Mothers (Ibu)",
-    ANAK: "Children (General)",
     [MENU_TARGET_ROLES.ANAK_6_8]: "Infant (6-8 Months)",
     [MENU_TARGET_ROLES.ANAK_9_11]: "Infant (9-11 Months)",
     [MENU_TARGET_ROLES.ANAK_12_23]: "Toddler (12-23 Months)",
 }
 
 const targetRolesOptions = [
-    { value: "ALL", label: targetRolesLabels.ALL },
     { value: MENU_TARGET_ROLES.IBU, label: targetRolesLabels[MENU_TARGET_ROLES.IBU] },
-    { value: "ANAK", label: targetRolesLabels.ANAK },
     { value: MENU_TARGET_ROLES.ANAK_6_8, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_6_8] },
     { value: MENU_TARGET_ROLES.ANAK_9_11, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_9_11] },
     { value: MENU_TARGET_ROLES.ANAK_12_23, label: targetRolesLabels[MENU_TARGET_ROLES.ANAK_12_23] },
@@ -68,7 +64,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
             description: "",
             cooking_instructions: "",
             cooking_time_minutes: null,
-            target_role: "ALL",
+            target_role: MENU_TARGET_ROLES.IBU,
             ingredients: [],
             nutrition_is_manual: false,
             serving_unit: "",
@@ -91,7 +87,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                 description: menu.description || "",
                 cooking_instructions: menu.cooking_instructions || "",
                 cooking_time_minutes: menu.cooking_time_minutes === null ? "" : menu.cooking_time_minutes,
-                target_role: menu.target_role || "ALL",
+                target_role: menu.target_role || MENU_TARGET_ROLES.IBU,
                 tags: menu.tags || "",
                 ingredients: menu.ingredients?.map(ing => ({
                     ingredient_id: ing.ingredient_id || ing.id,
@@ -118,7 +114,7 @@ export function MenuForm({ menu, open, onOpenChange }) {
                 description: "",
                 cooking_instructions: "",
                 cooking_time_minutes: null,
-                target_role: "ALL",
+                target_role: MENU_TARGET_ROLES.IBU,
                 ingredients: [],
                 nutrition_is_manual: false,
                 serving_unit: "",
