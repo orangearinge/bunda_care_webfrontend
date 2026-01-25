@@ -4,7 +4,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { IconChevronLeft, IconChevronRight, IconMessageReport, IconSearch } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconMessageReport, IconSearch, IconEye } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -28,12 +28,15 @@ import { EmptyState } from "@/components/admin/EmptyState"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useFeedbacks } from "@/hooks/useFeedbacks"
 import { useDebounce } from "@/hooks/useDebounce"
+import { FeedbackDetailDialog } from "@/components/admin/FeedbackDetailDialog"
 
 export default function FeedbacksPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [classificationFilter, setClassificationFilter] = useState("ALL")
     const [page, setPage] = useState(1)
     const [limit] = useState(10)
+    const [selectedFeedback, setSelectedFeedback] = useState(null)
+    const [isDetailOpen, setIsDetailOpen] = useState(false)
 
     // Debounce search query
     const debouncedSearchQuery = useDebounce(searchQuery, 500)
@@ -56,8 +59,8 @@ export default function FeedbacksPage() {
     const isSearching = searchQuery !== debouncedSearchQuery
 
     const feedbacks = data?.items || []
-    const totalPages = data?.pages || 1
-    const total = data?.total || 0
+    const totalPages = data?.pagination?.total_pages || 1
+    const total = data?.pagination?.total || 0
 
     const columns = [
         {
@@ -130,6 +133,25 @@ export default function FeedbacksPage() {
                     hour: "2-digit",
                     minute: "2-digit"
                 })
+            },
+        },
+        {
+            id: "actions",
+            cell: ({ row }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        onClick={() => {
+                            setSelectedFeedback(row.original)
+                            setIsDetailOpen(true)
+                        }}
+                    >
+                        <IconEye className="size-4" />
+                        <span className="sr-only">View Details</span>
+                    </Button>
+                )
             },
         },
     ]
@@ -290,6 +312,12 @@ export default function FeedbacksPage() {
                         <IconChevronRight className="size-4" />
                     </Button>
                 </div>
+                {/* Feedback Detail Dialog */}
+                <FeedbackDetailDialog
+                    feedback={selectedFeedback}
+                    open={isDetailOpen}
+                    onOpenChange={setIsDetailOpen}
+                />
             </div>
         </div>
     )

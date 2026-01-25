@@ -28,6 +28,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useArticles } from "@/hooks/useArticles"
+import { useDebounce } from "@/hooks/useDebounce"
 import { Plus, MoreHorizontal, Pencil, Trash2, Eye, Search, FileText } from "lucide-react"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { EmptyState } from "@/components/admin/EmptyState"
@@ -56,16 +57,18 @@ export default function ArticlesPage() {
         sort_order: "desc",
     })
 
+    // Debounce search
+    const debouncedSearch = useDebounce(filters.search, 500)
+
     // Prepare query params
     const queryParams = {
         page,
         limit,
-        ...filters
+        status: filters.status !== "ALL" ? filters.status : undefined,
+        search: debouncedSearch || undefined,
+        sort_by: filters.sort_by,
+        sort_order: filters.sort_order
     }
-    // Clean empty filters
-    Object.keys(queryParams).forEach(key => {
-        if (queryParams[key] === "" || queryParams[key] === "ALL") delete queryParams[key]
-    })
 
     // Fetch data using Hook
     const { data, isLoading } = useGetArticles(queryParams)
@@ -154,8 +157,11 @@ export default function ArticlesPage() {
                         <Select
                             value={`${filters.sort_by}_${filters.sort_order}`}
                             onValueChange={(value) => {
-                                const [sort_by, sort_order] = value.split("_")
+                                const lastIndex = value.lastIndexOf("_")
+                                const sort_by = value.substring(0, lastIndex)
+                                const sort_order = value.substring(lastIndex + 1)
                                 setFilters((prev) => ({ ...prev, sort_by, sort_order }))
+                                setPage(1)
                             }}
                         >
                             <SelectTrigger className="w-[200px]">
