@@ -17,3 +17,23 @@ export const useFeedbacks = (params = {}) => {
         staleTime: 2 * 60 * 1000,
     })
 }
+
+// Hook to trigger manual AI analysis
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+
+export const useAnalyzeFeedback = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (id) => feedbacksApi.analyzeFeedback(id),
+        onSuccess: (data) => {
+            toast.success("AI Analysis completed successfully")
+            // Invalidate feedback lists to refresh UI
+            queryClient.invalidateQueries(feedbackKeys.lists())
+        },
+        onError: (error) => {
+            toast.error(error.message || "Failed to analyze feedback")
+        }
+    })
+}

@@ -4,7 +4,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { IconChevronLeft, IconChevronRight, IconMessageReport, IconSearch, IconEye } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconMessageReport, IconSearch, IconEye, IconSparkles } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -26,9 +26,10 @@ import { Label } from "@/components/ui/label"
 import { SearchBar } from "@/components/admin/SearchBar"
 import { EmptyState } from "@/components/admin/EmptyState"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
-import { useFeedbacks } from "@/hooks/useFeedbacks"
+import { useFeedbacks, useAnalyzeFeedback } from "@/hooks/useFeedbacks"
 import { useDebounce } from "@/hooks/useDebounce"
 import { FeedbackDetailDialog } from "@/components/admin/FeedbackDetailDialog"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 
 export default function FeedbacksPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -50,6 +51,7 @@ export default function FeedbacksPage() {
     }
 
     const { data, isLoading, isError, isFetching } = useFeedbacks(queryParams)
+    const analyzeMutation = useAnalyzeFeedback()
 
     // Reset page when search query changes
     useEffect(() => {
@@ -138,19 +140,45 @@ export default function FeedbacksPage() {
         {
             id: "actions",
             cell: ({ row }) => {
+                const feedback = row.original
+                const needsAnalysis = !feedback.classification
+
                 return (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={() => {
-                            setSelectedFeedback(row.original)
-                            setIsDetailOpen(true)
-                        }}
-                    >
-                        <IconEye className="size-4" />
-                        <span className="sr-only">View Details</span>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        {needsAnalysis && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="size-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            disabled={analyzeMutation.isPending}
+                                            onClick={() => analyzeMutation.mutate(feedback.id)}
+                                        >
+                                            <IconSparkles className={`size-4 ${analyzeMutation.isPending ? 'animate-pulse' : ''}`} />
+                                            <span className="sr-only">Analyze with AI</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Run AI Analysis manually</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={() => {
+                                setSelectedFeedback(row.original)
+                                setIsDetailOpen(true)
+                            }}
+                        >
+                            <IconEye className="size-4" />
+                            <span className="sr-only">View Details</span>
+                        </Button>
+                    </div>
                 )
             },
         },
