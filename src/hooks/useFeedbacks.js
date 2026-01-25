@@ -27,9 +27,24 @@ export const useAnalyzeFeedback = () => {
 
     return useMutation({
         mutationFn: (id) => feedbacksApi.analyzeFeedback(id),
-        onSuccess: (data) => {
+        onSuccess: (newItem) => {
             toast.success("AI Analysis completed successfully")
-            // Invalidate feedback lists to refresh UI
+
+            // Optimistic Update via setQueriesData to update cache instanty without refetch
+            queryClient.setQueriesData({ queryKey: feedbackKeys.lists() }, (oldData) => {
+                if (!oldData?.items) return oldData
+
+                return {
+                    ...oldData,
+                    items: oldData.items.map((item) =>
+                        item.id === newItem.id
+                            ? { ...item, classification: newItem.classification }
+                            : item
+                    )
+                }
+            })
+
+            // Invalidate feedback lists to refresh UI eventually
             queryClient.invalidateQueries(feedbackKeys.lists())
         },
         onError: (error) => {

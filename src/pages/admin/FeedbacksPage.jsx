@@ -142,6 +142,7 @@ export default function FeedbacksPage() {
             cell: ({ row }) => {
                 const feedback = row.original
                 const needsAnalysis = !feedback.classification
+                const isAnalyzing = analyzeMutation.isPending && analyzeMutation.variables === feedback.id
 
                 return (
                     <div className="flex items-center gap-1">
@@ -156,7 +157,7 @@ export default function FeedbacksPage() {
                                             disabled={analyzeMutation.isPending}
                                             onClick={() => analyzeMutation.mutate(feedback.id)}
                                         >
-                                            <IconSparkles className={`size-4 ${analyzeMutation.isPending ? 'animate-pulse' : ''}`} />
+                                            <IconSparkles className={`size-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
                                             <span className="sr-only">Analyze with AI</span>
                                         </Button>
                                     </TooltipTrigger>

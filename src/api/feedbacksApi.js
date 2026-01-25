@@ -10,7 +10,10 @@ export const feedbacksApi = {
 
     // Trigger manual AI analysis for a feedback
     analyzeFeedback: async (id) => {
-        const response = await apiClient.post(`/api/admin/feedbacks/${id}/analyze`)
+        // Increase timeout to 60 seconds (60000ms) for AI operations
+        const response = await apiClient.post(`/api/admin/feedbacks/${id}/analyze`, {}, {
+            timeout: 60000
+        })
         return response.data
     },
 }
