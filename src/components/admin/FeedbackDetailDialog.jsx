@@ -17,7 +17,9 @@ export function FeedbackDetailDialog({ feedback, open, onOpenChange }) {
 
     const formatDate = (dateString) => {
         if (!dateString) return "-"
-        return new Date(dateString).toLocaleDateString("id-ID", {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return "-"
+        return date.toLocaleDateString("id-ID", {
             weekday: 'long',
             year: "numeric",
             month: "long",

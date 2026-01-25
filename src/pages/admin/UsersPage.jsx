@@ -67,6 +67,17 @@ export default function UsersPage() {
     const totalPages = data?.pages || 1
     const total = data?.total || 0
 
+    const formatDate = (dateString) => {
+        if (!dateString) return "-"
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return "-"
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        })
+    }
+
     const columns = [
         {
             accessorKey: "id",
@@ -95,15 +106,10 @@ export default function UsersPage() {
             },
         },
         {
-            accessorKey: "createdAt",
+            accessorKey: "created_at",
             header: "Created At",
             cell: ({ row }) => {
-                const date = new Date(row.getValue("createdAt"))
-                return date.toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                })
+                return formatDate(row.getValue("created_at"))
             },
         },
         {

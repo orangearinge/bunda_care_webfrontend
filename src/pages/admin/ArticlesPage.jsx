@@ -90,7 +90,9 @@ export default function ArticlesPage() {
     // Format date
     const formatDate = (dateString) => {
         if (!dateString) return "-"
-        return new Date(dateString).toLocaleDateString("en-US", {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return "-"
+        return date.toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",
