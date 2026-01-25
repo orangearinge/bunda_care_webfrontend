@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useUpdateUserRole } from "@/hooks/useUsers"
 import { ROLES_LIST, USER_ROLES } from "@/constants/roles"
+import { getRoleLabel } from "@/utils/roleHelper"
 
 
 
@@ -66,7 +67,7 @@ export function UserRoleDialog({ user, open, onOpenChange }) {
                             <SelectContent>
                                 {ROLES_LIST.map((role) => (
                                     <SelectItem key={role} value={role}>
-                                        {role}
+                                        {getRoleLabel(role)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

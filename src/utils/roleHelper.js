@@ -7,21 +7,21 @@ export const ROLES = {
     ADMIN: 'ADMIN',
     IBU_HAMIL: 'IBU_HAMIL',
     IBU_MENYUSUI: 'IBU_MENYUSUI',
-    ANAK_BALITA: 'ANAK_BALITA'
+    ANAK_BATITA: 'ANAK_BATITA'
 }
 
 export const ROLE_LABELS = {
     [ROLES.ADMIN]: 'Admin',
     [ROLES.IBU_HAMIL]: 'Ibu Hamil',
     [ROLES.IBU_MENYUSUI]: 'Ibu Menyusui',
-    [ROLES.ANAK_BALITA]: 'Anak Balita'
+    [ROLES.ANAK_BATITA]: 'Anak Batita'
 }
 
 export const ROLE_OPTIONS = [
     { value: ROLES.ADMIN, label: ROLE_LABELS[ROLES.ADMIN] },
     { value: ROLES.IBU_HAMIL, label: ROLE_LABELS[ROLES.IBU_HAMIL] },
     { value: ROLES.IBU_MENYUSUI, label: ROLE_LABELS[ROLES.IBU_MENYUSUI] },
-    { value: ROLES.ANAK_BALITA, label: ROLE_LABELS[ROLES.ANAK_BALITA] }
+    { value: ROLES.ANAK_BATITA, label: ROLE_LABELS[ROLES.ANAK_BATITA] }
 ]
 
 /**
@@ -43,7 +43,7 @@ export function getRoleDescription(role) {
         [ROLES.ADMIN]: 'Administrator with full system access',
         [ROLES.IBU_HAMIL]: 'Pregnant mother with nutrition tracking for pregnancy',
         [ROLES.IBU_MENYUSUI]: 'Breastfeeding mother with lactation monitoring',
-        [ROLES.ANAK_BALITA]: 'Parent tracking child nutrition for toddlers'
+        [ROLES.ANAK_BATITA]: 'Parent tracking child nutrition for toddlers'
     }
     return descriptions[role] || 'User role'
 }
@@ -69,7 +69,7 @@ export function getRoleRequiredFields(role) {
             'age_year',
             'lactation_ml'
         ],
-        [ROLES.ANAK_BALITA]: [
+        [ROLES.ANAK_BATITA]: [
             'weight_kg',
             'height_cm',
             'age_year'

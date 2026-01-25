@@ -5,7 +5,7 @@ export const USER_ROLES = {
     ADMIN: "ADMIN",
     IBU_HAMIL: "IBU_HAMIL",
     IBU_MENYUSUI: "IBU_MENYUSUI",
-    ANAK_BALITA: "ANAK_BALITA",
+    ANAK_BATITA: "ANAK_BATITA",
 };
 
 /**
