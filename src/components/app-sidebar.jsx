@@ -8,15 +8,13 @@ import {
   IconFileDescription,
   IconFileWord,
   IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
   IconMessageReport,
-  IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
+import logo from "@/assets/logo/image.png"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
@@ -86,8 +84,8 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="/admin">
-                <IconInnerShadowTop className="!size-5" />
+              <a href="/admin" className="flex items-center gap-2">
+                <img src={logo} alt="Bunda Care Logo" className="size-6 object-contain" />
                 <span className="text-base font-semibold">Bunda Care</span>
               </a>
             </SidebarMenuButton>
