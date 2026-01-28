@@ -36,8 +36,7 @@ import { EmptyState } from "@/components/admin/EmptyState"
 import { TableSkeleton } from "@/components/admin/TableSkeleton"
 import { useUsers } from "@/hooks/useUsers"
 import { useDebounce } from "@/hooks/useDebounce"
-import { USER_ROLES, ROLES_LIST } from "@/constants/roles"
-import { getRoleLabel } from "@/utils/roleHelper"
+import { USER_ROLES, ROLES_LIST, getRoleLabel } from "@/constants/roles"
 
 export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState("")

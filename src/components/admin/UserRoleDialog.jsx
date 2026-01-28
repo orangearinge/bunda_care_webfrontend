@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useUpdateUserRole } from "@/hooks/useUsers"
-import { ROLES_LIST, USER_ROLES } from "@/constants/roles"
-import { getRoleLabel } from "@/utils/roleHelper"
+import { ROLES_LIST, USER_ROLES, getRoleLabel } from "@/constants/roles"
 
 
 
