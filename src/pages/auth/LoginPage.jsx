@@ -5,7 +5,7 @@ import { useLogin } from "@/hooks/useAuthHooks"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { IconInnerShadowTop } from "@tabler/icons-react"
+import logo from "@/assets/logo/image.png"
 import { loginSchema } from "@/schemas/authSchemas"
 
 export default function LoginPage() {
@@ -39,9 +39,7 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <FieldGroup>
                             <div className="flex flex-col items-center gap-2 text-center mb-8">
-                                <div className="flex size-14 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/20">
-                                    <IconInnerShadowTop className="size-7 text-primary" />
-                                </div>
+                                <img src={logo} alt="Bunda Care Logo" className="size-20 mb-2 object-contain" />
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">Bunda Care Admin</h1>
                                 <FieldDescription className="text-base text-muted-foreground">
                                     Enter your credentials to access the admin panel
